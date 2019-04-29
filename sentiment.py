@@ -2,7 +2,6 @@
 import random
 from pathlib import Path
 import numpy as np
-import swifter
 import tqdm
 from bs4 import BeautifulSoup
 import string
