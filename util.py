@@ -22,7 +22,7 @@ from params import *
 
 def normalize_sentence(text):
     wn = nltk.WordNetLemmatizer()
-    text = BeautifulSoup(text, 'lxml').get_text()
+    text = BeautifulSoup(str(text), 'lxml').get_text()
     text = re.sub(r'@[a-zA-z_0-9]+', '', text)
     text = re.sub(r'http(s)?://[a-zA-Z0-9./]+', '', text)
     text = re.sub(r"'".format(string.punctuation), '', text)
