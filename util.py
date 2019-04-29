@@ -1,7 +1,6 @@
 import random
 from pathlib import Path
 import numpy as np
-import swifter
 import tqdm
 from bs4 import BeautifulSoup
 import string
@@ -22,10 +21,10 @@ from params import *
 
 def normalize_sentence(text):
     wn = nltk.WordNetLemmatizer()
+
     text = BeautifulSoup(str(text), 'lxml').get_text()
     text = re.sub(r'@[a-zA-z_0-9]+', '', text)
     text = re.sub(r'http(s)?://[a-zA-Z0-9./]+', '', text)
-    text = re.sub(r"'".format(string.punctuation), '', text)
     text = re.sub(r'[{}]'.format(string.punctuation), ' ', text)
     text = re.sub(r'\s+', ' ', text)
     text = re.sub(r'[0-9]+', '', text)
@@ -34,6 +33,7 @@ def normalize_sentence(text):
     text = wn.lemmatize(text)
 
     return text
+
 
 def read_eth_data():
     eth = Path('datasets/twitter-datasets/')
@@ -50,34 +50,6 @@ def read_eth_data():
     y = [1] * len(txt_pos) + [0] * len(txt_neg)
     y = np.array(y)
     return txt, y
-
-def read_csv_data():
-    cols = ['sentiment', 'id', 'date', 'query_string', 'user', 'text']
-    df = pd.read_csv('./datasets/training.1600000.processed.noemoticon.csv',
-            encoding='ISO-8859-1', header=None, names=cols)
-    df.drop(['id', 'date', 'query_string', 'user'], axis=1, inplace=True)
-
-    df = df.sample()
-
-    df['text'] = df['text'].swifter.apply(normalize_sentence)
-
-    def filter_for_nans(df):
-        def is_bad_fn(t):
-            return type(t) != type('str')
-
-        # In some rows, df['text'] is float instead of string.
-        # Simply drop the bad rows.
-        idx = np.argwhere(df['text'].apply(is_bad_fn)).flatten()
-        df.drop(labels=idx, inplace=True)
-
-    filter_for_nans(df)
-
-    X = list(df['text'])
-    y = np.array(df['sentiment'])
-
-    y[y == 4] = 1
-
-    return X, y
 
 
 def make_final_data(sentences, labels):
@@ -112,23 +84,9 @@ def load_final_data():
     return X_train, X_test, y_train, y_test
 
 
-def concatenate_data_sources(*args):
-    X, y = args[0]
-    for arg in args[1:]:
-        X_now, y_now = arg
-        X.extend(X_now)
-        y = np.concatenate((y, y_now))
-    return X, y
-
-
 def prepare_data():
     p = Path('datasets/data.bin.npz')
     if p.exists():
         return
-    X, y = concatenate_data_sources(
-            read_csv_data(),
-            read_eth_data()
-            )
-
+    X, y = read_eth_data()
     make_final_data(X, y)
-
