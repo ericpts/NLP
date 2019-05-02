@@ -24,6 +24,18 @@ MAX_WORDS = 20000
 MAX_SEQUENCE_LENGTH = 40
 PREDICTION_FILE = 'test_prediction.csv'
 
+def load_data(train):
+    p = Path(DATA_BINARIES[train])
+    # If the data was already prepared by another run
+    if not p.exists():
+        prepare_data(train=train)
+    d = np.load(str(p))
+    if train:
+        return d['X'], d['y']
+    else:
+        # test data has no labels
+        return d['X']
+
 def prepare_data(train):
     if train:
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
