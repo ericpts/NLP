@@ -36,14 +36,17 @@ def main(notrain):
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1)
 
     assert X_train.shape[0] == y_train.shape[0]
-    assert X_test.shape[0] == y_test.shape[0]
+    assert X_val.shape[0] == y_val.shape[0]
+    # We can further split the train data to train and validation data
+    print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
 
-    print('Training on {}, validating on {}'.format(X_train.shape[0], X_test.shape[0]))
-
-
-    if Path('model.bin').exists():
-        model = keras.models.load_model('model.bin')
-        print('Loaded model from disk.')
+    if notrain:
+        if Path('model.bin').exists():
+            model = keras.models.load_model('model.bin')
+            print('Loaded model from disk.')
+        else:
+            print("Model couldn't be loaded from disk!")
+            exit(1)
     else:
         model = twitter_model()
 
