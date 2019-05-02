@@ -1,19 +1,14 @@
-import random
+###########################
+# IMPORTS                 #
+###########################
+import re
+import os
+import nltk
+import string
 from pathlib import Path
 import numpy as np
-import tqdm
 from bs4 import BeautifulSoup
-import string
-import re
-import pickle
-import pandas as pd
-import nltk
-from typing import List
-import string
-from math import ceil
 from sklearn.model_selection import train_test_split
-
-import tensorflow as tf
 import tensorflow.keras as keras
 
 import numpy as np

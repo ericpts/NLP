@@ -1,23 +1,12 @@
 #!/usr/bin/env python3
-import random
-from pathlib import Path
-import numpy as np
-import tqdm
-from bs4 import BeautifulSoup
-import string
-import re
-import pickle
+###########################
+# IMPORTS                 #
+###########################
+import argparse
 import pandas as pd
-import nltk
-from typing import List
-import string
-from math import ceil
-
-import tensorflow as tf
+from pathlib import Path
 import tensorflow.keras as keras
-
-import numpy as np
-
+from sklearn.model_selection import train_test_split
 from util import *
 
 
