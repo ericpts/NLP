@@ -50,7 +50,7 @@ def main(notrain):
     else:
         model = twitter_model()
         model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
-        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=1, batch_size=1024)
+        model.fit(X_train, y_train, validation_data=(X_val, y_val))
         model.save('model.bin')
         print("Model saved!")
 
