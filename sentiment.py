@@ -9,12 +9,14 @@ import tensorflow.keras as keras
 from sklearn.model_selection import train_test_split
 from util import *
 
-
+###########################
+# MODEL                   #
+###########################
 def twitter_model():
-    inputs = keras.Input(shape=(kMaxSequenceLength, ))
+    inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
-    X = keras.layers.Embedding(kMaxWords, 128, input_length=kMaxSequenceLength)(X)
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
     X = keras.layers.Dropout(1 / 4)(X)
     X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
     X = keras.layers.LSTM(64)(X)
