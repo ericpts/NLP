@@ -54,7 +54,15 @@ def main(notrain):
         model.save('model.bin')
         print("Model saved!")
 
+    # Predict using the test data
+    X_test = load_data(train=False)
 
+    y_pred = model.predict(X_test).argmax(axis=-1)
+    # Negative class is denoted by -1
+    y_pred = [-1 if pred == 0 else pred for pred in y_pred]
+    df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
+    df.index.name = 'Id'
+    df.to_csv(PREDICTION_FILE)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
