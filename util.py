@@ -7,7 +7,6 @@ import nltk
 import string
 from pathlib import Path
 import numpy as np
-from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 import tensorflow.keras as keras
 
