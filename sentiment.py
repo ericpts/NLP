@@ -27,10 +27,13 @@ def twitter_model():
     model.summary()
     return model
 
-def main():
-    prepare_data()
-
-    X_train, X_test, y_train, y_test = load_final_data()
+###########################
+# MAIN                    #
+###########################
+def main(notrain):
+    X, y = load_data(train=True)
+    # Split train and val data in a 90-10 split
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1)
 
     assert X_train.shape[0] == y_train.shape[0]
     assert X_test.shape[0] == y_test.shape[0]
@@ -52,4 +55,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--notrain",  action='store_true', help="Specify this option to not train and use the latest saved model")
+    notrain = parser.parse_args().notrain
+    main(notrain)
