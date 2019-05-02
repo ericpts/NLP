@@ -11,22 +11,6 @@ from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 import tensorflow.keras as keras
 
-def normalize_sentence(text):
-    wn = nltk.WordNetLemmatizer()
-
-    text = BeautifulSoup(str(text), 'lxml').get_text()
-    text = re.sub(r'@[a-zA-z_0-9]+', '', text)
-    text = re.sub(r'http(s)?://[a-zA-Z0-9./]+', '', text)
-    text = re.sub(r'[{}]'.format(string.punctuation), ' ', text)
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[0-9]+', '', text)
-    text = text.lower()
-    text = ''.join([c for c in text if c in string.printable])
-    text = wn.lemmatize(text)
-
-    return text
-
-
 def read_eth_data():
     eth = Path('datasets/twitter-datasets/')
 
@@ -71,3 +55,12 @@ MAX_SEQUENCE_LENGTH = 40
     else:
         np.savez(DATA_BINARIES[train], X=X)
 
+# Normalize a piece of text
+# Tweets are whitespace separated, have <user> and <url> already
+def normalize_sentence(text):
+    # Remove whitespace
+    text = re.sub(r'\s+', ' ', text)
+    # Remove weird non-printable characters
+    text = ''.join([c for c in text if c in string.printable])
+    text = nltk.WordNetLemmatizer().lemmatize(text.lower())
+    return text
