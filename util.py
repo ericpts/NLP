@@ -11,9 +11,6 @@ from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 import tensorflow.keras as keras
 
-import numpy as np
-from params import *
-
 def normalize_sentence(text):
     wn = nltk.WordNetLemmatizer()
 
@@ -52,36 +49,19 @@ def make_final_data(sentences, labels):
     tokenizer.fit_on_texts(sentences)
 
     X = tokenizer.texts_to_sequences(sentences)
+###########################
+# GLOBAL HYPERPARAMETERS  #
+###########################
+MAX_WORDS = 20000
+MAX_SEQUENCE_LENGTH = 40
+
     X = keras.preprocessing.sequence.pad_sequences(
             X,
-            maxlen=kMaxSequenceLength,
+            maxlen=MAX_SEQUENCE_LENGTH,
             padding='post',
             truncating='post')
-    y = np.array(labels)
-    y = keras.utils.to_categorical(y, num_classes=2)
+    if train:
+        np.savez(DATA_BINARIES[train], X=X, y=y)
+    else:
+        np.savez(DATA_BINARIES[train], X=X)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.01, random_state=1337)
-
-    np.savez('datasets/data.bin.npz',
-            X_train=X_train,
-            X_test=X_test,
-            y_train=y_train,
-            y_test=y_test)
-
-
-def load_final_data():
-    p = Path('datasets/data.bin.npz')
-    assert p.exists()
-    d = np.load(str(p))
-    X_train, y_train = d['X_train'], d['y_train']
-    X_test, y_test = d['X_test'], d['y_test']
-    return X_train, X_test, y_train, y_test
-
-
-def prepare_data():
-    p = Path('datasets/data.bin.npz')
-    if p.exists():
-        return
-    X, y = read_eth_data()
-    make_final_data(X, y)
