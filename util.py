@@ -79,8 +79,13 @@ def prepare_data(train):
 def normalize_sentence(text):
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[0-9]', '', text)
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
+    # Remove dots
+    text = re.sub(r' \. ', r' ', text)
+    # Remove backslashes
+    text = re.sub(r'\\', r'', text)
     # Reform Emoijis of the form (<char>)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
