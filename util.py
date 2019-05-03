@@ -113,7 +113,6 @@ def normalize_sentence(text : str) -> str:
     text = re.sub(r'\*', r'', text)
     text = re.sub(r'\{', r'', text)
     text = re.sub(r'\}', r'', text)
-    text = re.sub(r'\'', r'', text)
     text = re.sub(r'\"', r'', text)
     text = re.sub(r'\|', r'', text)
     text = re.sub(r'\:', r'', text)
