@@ -47,8 +47,6 @@ def prepare_data(train):
         X_pos = list(dict.fromkeys(X_pos))
         X_neg = list(dict.fromkeys(X_neg))
         X = X_pos + X_neg
-
-        X = X[:20000]
         X = [normalize_sentence(t) for t in X]
         y = np.array([1] * len(X_pos) + [0] * len(X_neg))
         y = keras.utils.to_categorical(y, num_classes=2)
@@ -96,7 +94,8 @@ def normalize_sentence(text):
     # keep common emojis
     common_emojis = [':)', ':D', ':(', ';)', ':-)', ':P', '=)', '(:',
         ';-)', ':/', 'XD', '=D', ':o', '=]', 'D:', ';D', ':]', ':-',
-        '=/', '=(', '*)', ':*', '._.', ':|', '<3', '>.<', '^.^', '<3']
+        '=/', '=(', '*)', ':*', '._.', ':|', '<3', '>.<', '^.^', '<3',
+        '-_-', '-__-', '.__.']
 
     # handle emojis
     for (i, emoji) in enumerate(common_emojis):
@@ -124,12 +123,16 @@ def normalize_sentence(text):
     text = re.sub(r' \> ', r' ', text)
     text = re.sub(r' \< ', r' ', text)
 
-    # r i p to rip
+    # r i p to rip -- rest of abbreviations seem fine
     text = re.sub(r'r\si\sp', r'rip', text)
 
     # Remove single letters apart from x
     text = re.sub(r'\s[a-wy-zA-WY-Z]\s[a-wy-zA-WY-Z]\s', r' ', text)
-    print(text)
+
+    # Concatenate consecutive punctuation groups
+    for p in "><!?.()":
+        for t in range(5):
+            text = text.replace(p + ' ' + p, p * 2)
 
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
     return text
