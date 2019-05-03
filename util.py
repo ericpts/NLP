@@ -20,7 +20,7 @@ NEGATIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_n
 TEST_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'test_data.txt')
 DATA_BINARIES = {True: TRAIN_DATA_BINARY, False: TEST_DATA_BINARY} # not the best convention
 MAX_WORDS = 20000
-MAX_SEQUENCE_LENGTH = 40
+MAX_SEQUENCE_LENGTH = 55
 PREDICTION_FILE = 'test_prediction.csv'
 # Global tokenizer
 tokenizer = "not specified"
@@ -79,16 +79,18 @@ def prepare_data(train):
 def normalize_sentence(text):
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[0-9]', '', text)
+    # Don't remove <3
+    text = re.sub(r'[0-24-9]', '', text)
+    text = re.sub(r'\< 3', '<3', text)
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
     # Specifics to the dataset
     text = re.sub(r' - _ - ', r' -_- ', text)
-    text = re.sub(r' ( . . . ) ', r' ', text)
+    text = re.sub(r'\( . . . \)', r' ', text)
     text = re.sub(r',', r'', text)
     # Reform Emoijis of the form (<char>)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
-    # Remove ., _, *, {, }, ', ", |, \
+    # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=
     text = re.sub(r' \. ', r' ', text)
     text = re.sub(r'\\', r'', text)
     text = re.sub(r'\s_', r' ', text)
@@ -98,9 +100,21 @@ def normalize_sentence(text):
     text = re.sub(r'\'', r'', text)
     text = re.sub(r'\"', r'', text)
     text = re.sub(r'\|', r'', text)
+    text = re.sub(r'\:', r'', text)
+    text = re.sub(r'\~', r'', text)
+    text = re.sub(r'\`', r'', text)
+    text = re.sub(r'\^', r'', text)
+    text = re.sub(r'\=', r'', text)
     # Watch to not remove -_-
     text = re.sub(r' \_', r' ', text)
+    # Watch to not remove tokens <user>, <url>
+    text = re.sub(r' \> ', r' ', text)
+    text = re.sub(r' \< ', r' ', text)
 
+    # r i p to rip
+    text = re.sub(r'r\si\sp', r'rip', text)
+    # Remove single letters apart from x
+    text = re.sub(r'\s[a-wy-zA-WY-Z]\s[a-wy-zA-WY-Z]\s', r' ', text)
 
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
     return text

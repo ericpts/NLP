@@ -16,7 +16,7 @@ def twitter_model1():
     inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
-    X = keras.layers.Embedding(MAX_WORDS, 256, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
     X = keras.layers.Dropout(1 / 4)(X)
     X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
     X = keras.layers.LSTM(64)(X)
@@ -30,7 +30,7 @@ def twitter_model2():
     inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
-    X = keras.layers.Embedding(MAX_WORDS, 256, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
     X = keras.layers.Dropout(1 / 4)(X)
     X = keras.layers.LSTM(64, return_sequences=True)(X)
     X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
