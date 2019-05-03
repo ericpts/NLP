@@ -3,6 +3,7 @@
 ###########################
 import re
 import os
+import sys
 import nltk
 import string
 from pathlib import Path
@@ -84,23 +85,25 @@ def prepare_data(train):
 def normalize_sentence(text):
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
-    
+
+    # Remove weird non-printable characters
+    text = ''.join([c for c in text if c in string.printable])
+
+    # Specifics to the dataset
+    text = re.sub(r'\( . . . \)', r' ', text)
+    text = re.sub(r',', r'', text)
+
+    # keep common emojis
     common_emojis = [':)', ':D', ':(', ';)', ':-)', ':P', '=)', '(:',
         ';-)', ':/', 'XD', '=D', ':o', '=]', 'D:', ';D', ':]', ':-',
         '=/', '=(', '*)', ':*', '._.', ':|', '<3', '>.<', '^.^', '<3']
 
+    # handle emojis
+    for (i, emoji) in enumerate(common_emojis):
+        spaced_emoji = ' '.join(list(emoji))
+        text = text.replace(emoji, ' <emoji{}> '.format(i))
+        text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
 
-    # Don't remove <3
-    text = re.sub(r'[0-24-9]', '', text)
-    text = re.sub(r'\< 3', '<3', text)
-    # Remove weird non-printable characters
-    text = ''.join([c for c in text if c in string.printable])
-    # Specifics to the dataset
-    text = re.sub(r' - _ - ', r' -_- ', text)
-    text = re.sub(r'\( . . . \)', r' ', text)
-    text = re.sub(r',', r'', text)
-    # Reform Emoijis of the form (<char>)
-    text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
     # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=
     text = re.sub(r' \. ', r' ', text)
     text = re.sub(r'\\', r'', text)
@@ -117,16 +120,16 @@ def normalize_sentence(text):
     text = re.sub(r'\^', r'', text)
     text = re.sub(r'\=', r'', text)
 
-    # Watch to not remove -_-
-    text = re.sub(r' \_', r' ', text)
     # Watch to not remove tokens <user>, <url>
     text = re.sub(r' \> ', r' ', text)
     text = re.sub(r' \< ', r' ', text)
 
     # r i p to rip
     text = re.sub(r'r\si\sp', r'rip', text)
+
     # Remove single letters apart from x
     text = re.sub(r'\s[a-wy-zA-WY-Z]\s[a-wy-zA-WY-Z]\s', r' ', text)
+    print(text)
 
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
     return text
