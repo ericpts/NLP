@@ -14,7 +14,7 @@ from models import *
 def main(model_name: str, retrain: bool) -> None:
     model_path = 'models/{}.bin'.format(model_name)
     if not Path(model_path).exists() or retrain:
-        X, y = load_data(train=False)
+        X, y = load_data(train=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
 
         assert X_train.shape[0] == y_train.shape[0]
