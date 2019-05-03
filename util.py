@@ -54,7 +54,7 @@ def prepare_data(train):
         X = [part.split(',')[1] for part in X]
         X = [normalize_sentence(t) for t in X]
         # Bad way of doing it, TODO: save and restore the tokenizer
-        if tokenizer  == "not specified":
+        if tokenizer == "not specified":
             X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
             X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
             X_train = X_pos + X_neg
