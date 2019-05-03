@@ -78,8 +78,8 @@ def normalize_sentence(text : str) -> str:
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
     # Remove random numbers
-    # Exclude: 4 you, 0 friends, < 3
-    text = re.sub(r'\s[1-24-9]\s', '', text)
+    # Exclude: 4 you, 0 friends, < 3, me 2
+    text = re.sub(r'\s[15-9]\s', ' ', text)
     # This needs to be done twice, find a better way
     text = re.sub(r'\s[0-9][0-9]+\s', ' ', text)
     text = re.sub(r'\s[0-9][0-9]+\s', ' ', text)
