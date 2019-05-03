@@ -86,11 +86,21 @@ def normalize_sentence(text):
     text = re.sub(r' - _ - ', r' -_- ', text)
     text = re.sub(r' ( . . . ) ', r' ', text)
     text = re.sub(r',', r'', text)
-    # Remove dots
-    text = re.sub(r' \. ', r' ', text)
-    # Remove backslashes
-    text = re.sub(r'\\', r'', text)
     # Reform Emoijis of the form (<char>)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
+    # Remove ., _, *, {, }, ', ", |, \
+    text = re.sub(r' \. ', r' ', text)
+    text = re.sub(r'\\', r'', text)
+    text = re.sub(r'\s_', r' ', text)
+    text = re.sub(r'\*', r'', text)
+    text = re.sub(r'\{', r'', text)
+    text = re.sub(r'\}', r'', text)
+    text = re.sub(r'\'', r'', text)
+    text = re.sub(r'\"', r'', text)
+    text = re.sub(r'\|', r'', text)
+    # Watch to not remove -_-
+    text = re.sub(r' \_', r' ', text)
+
+
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
     return text
