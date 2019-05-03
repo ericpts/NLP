@@ -38,6 +38,7 @@ def load_data(train):
         return d['X']
 
 def prepare_data(train):
+    global tokenizer
     if train:
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
         X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
