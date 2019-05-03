@@ -22,8 +22,22 @@ def twitter_model():
     X = keras.layers.LSTM(64)(X)
     X = keras.layers.Dense(2)(X)
 
-    model = keras.models.Model(inputs=inputs, outputs=X, name='TwitterModel')
+    model = keras.models.Model(inputs=inputs, outputs=X, name='TwitterModel1')
+    model.summary()
+    return model
 
+def twitter_model2():
+    inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    X = inputs
+    X = keras.layers.Embedding(MAX_WORDS, 256, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.Dropout(1 / 4)(X)
+    X = keras.layers.LSTM(64, return_sequences=True)(X)
+    X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
+    X = keras.layers.Reshape((100*64, ))(X)
+    X = keras.layers.Dense(2)(X)
+
+    model = keras.models.Model(inputs=inputs, outputs=X, name='TwitterModel2')
     model.summary()
     return model
 
