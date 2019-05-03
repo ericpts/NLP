@@ -81,5 +81,7 @@ def normalize_sentence(text):
     text = re.sub(r'\s+', ' ', text)
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
+    # Reform Emoijis of the form (<char>)
+    text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
     text = nltk.WordNetLemmatizer().lemmatize(text.lower())
     return text
