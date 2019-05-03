@@ -82,6 +82,9 @@ def normalize_sentence(text : str) -> str:
     text = re.sub(r'\( . . . \)', r' ', text)
     text = re.sub(r',', r'', text)
 
+    # Reform Emoijis of the form (<char>) e.g. (y)
+    text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
+
     # keep common emojis
     common_emojis = [':)', ':D', ':(', ';)', ':-)', ':P', '=)', '(:',
         ';-)', ':/', 'XD', '=D', ':o', '=]', 'D:', ';D', ':]', ':-',
@@ -109,6 +112,7 @@ def normalize_sentence(text : str) -> str:
     text = re.sub(r'\`', r'', text)
     text = re.sub(r'\^', r'', text)
     text = re.sub(r'\=', r'', text)
+    text = re.sub(r' \_', r' ', text)
 
     # Watch to not remove tokens <user>, <url>
     text = re.sub(r' \> ', r' ', text)
