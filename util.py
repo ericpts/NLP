@@ -46,6 +46,8 @@ def prepare_data(train):
         X_pos = list(dict.fromkeys(X_pos))
         X_neg = list(dict.fromkeys(X_neg))
         X = X_pos + X_neg
+
+        X = X[:20000]
         X = [normalize_sentence(t) for t in X]
         y = np.array([1] * len(X_pos) + [0] * len(X_neg))
         y = keras.utils.to_categorical(y, num_classes=2)
@@ -82,6 +84,12 @@ def prepare_data(train):
 def normalize_sentence(text):
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
+    
+    common_emojis = [':)', ':D', ':(', ';)', ':-)', ':P', '=)', '(:',
+        ';-)', ':/', 'XD', '=D', ':o', '=]', 'D:', ';D', ':]', ':-',
+        '=/', '=(', '*)', ':*', '._.', ':|', '<3', '>.<', '^.^', '<3']
+
+
     # Don't remove <3
     text = re.sub(r'[0-24-9]', '', text)
     text = re.sub(r'\< 3', '<3', text)
@@ -108,6 +116,7 @@ def normalize_sentence(text):
     text = re.sub(r'\`', r'', text)
     text = re.sub(r'\^', r'', text)
     text = re.sub(r'\=', r'', text)
+
     # Watch to not remove -_-
     text = re.sub(r' \_', r' ', text)
     # Watch to not remove tokens <user>, <url>
