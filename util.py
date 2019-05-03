@@ -22,6 +22,8 @@ DATA_BINARIES = {True: TRAIN_DATA_BINARY, False: TEST_DATA_BINARY} # not the bes
 MAX_WORDS = 20000
 MAX_SEQUENCE_LENGTH = 40
 PREDICTION_FILE = 'test_prediction.csv'
+# Global tokenizer
+tokenizer = "not specified"
 
 def load_data(train):
     p = Path(DATA_BINARIES[train])
@@ -40,16 +42,25 @@ def prepare_data(train):
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
         X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
         X = X_pos + X_neg
+        X = [normalize_sentence(t) for t in X]
         y = np.array([1] * len(X_pos) + [0] * len(X_neg))
         y = keras.utils.to_categorical(y, num_classes=2)
+        # Allow a maximum of different words
+        tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
+        tokenizer.fit_on_texts(X)
     else:
         X = Path(TEST_DATA_FILE).read_text().split('\n')[:-1] # Remove the index
         X = [part.split(',')[1] for part in X]
+        X = [normalize_sentence(t) for t in X]
+        # Bad way of doing it, TODO: save and restore the tokenizer
+        if tokenizer  == "not specified":
+            X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
+            X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
+            X_train = X_pos + X_neg
+            X_train = [normalize_sentence(t) for t in X_train]
+            tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
+            tokenizer.fit_on_texts(X_train)
 
-    X = [normalize_sentence(t) for t in X]
-    # Allow a maximum of different words
-    tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
-    tokenizer.fit_on_texts(X)
     X = tokenizer.texts_to_sequences(X)
     # Pad all sentences to a fixed sequence length
     X = keras.preprocessing.sequence.pad_sequences(
