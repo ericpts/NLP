@@ -82,6 +82,10 @@ def normalize_sentence(text):
     text = re.sub(r'[0-9]', '', text)
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
+    # Specifics to the dataset
+    text = re.sub(r' - _ - ', r' -_- ', text)
+    text = re.sub(r' ( . . . ) ', r' ', text)
+    text = re.sub(r',', r'', text)
     # Remove dots
     text = re.sub(r' \. ', r' ', text)
     # Remove backslashes
