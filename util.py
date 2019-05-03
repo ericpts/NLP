@@ -139,5 +139,9 @@ def normalize_sentence(text : str) -> str:
         for t in range(5):
             text = text.replace(p + ' ' + p, p * 2)
 
-    text = nltk.WordNetLemmatizer().lemmatize(text.lower())
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
+     # lematize everything as verbs, need to pass then individually
+    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word, 'v') for word in text.split())
+
     return text
