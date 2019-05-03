@@ -12,13 +12,13 @@ from util import *
 ###########################
 # MODEL                   #
 ###########################
-def twitter_model():
+def twitter_model1():
     inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
-    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.Embedding(MAX_WORDS, 256, input_length=MAX_SEQUENCE_LENGTH)(X)
     X = keras.layers.Dropout(1 / 4)(X)
-    X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
+    X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
     X = keras.layers.LSTM(64)(X)
     X = keras.layers.Dense(2)(X)
 
@@ -41,6 +41,19 @@ def twitter_model2():
     model.summary()
     return model
 
+def ensembleModel(models):
+    model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+    # Collect outputs of models
+    outputs = [model(model_input) for model in models]
+    # Average outputs
+    avg_output = keras.layers.average(outputs)
+    # Build model from same input and avg output
+    modelEns = keras.models.Model(inputs=model_input, outputs=avg_output, name='ensemble')
+    modelEns.summary()
+    return modelEns
+
+
+
 ###########################
 # MAIN                    #
 ###########################
@@ -61,7 +74,9 @@ def main(notrain):
         assert X_val.shape[0] == y_val.shape[0]
         print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
 
-        model = twitter_model()
+        # Make ensemble of these models
+        models = [twitter_model1(), twitter_model2()]
+        model = ensembleModel(models)
         model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
         model.fit(X_train, y_train, validation_data=(X_val, y_val))
         model.save('model.bin')
