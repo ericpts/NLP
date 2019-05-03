@@ -72,6 +72,9 @@ def prepare_data(train : bool) -> None:
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
 def normalize_sentence(text : str) -> str:
+    # lower case the text
+    text = text.lower()
+
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
     # Remove random numbers
@@ -127,8 +130,10 @@ def normalize_sentence(text : str) -> str:
     # r i p to rip -- rest of abbreviations seem fine
     text = re.sub(r'r\si\sp', r'rip', text)
 
-    # Remove single letters apart from x
-    text = re.sub(r'\s[a-wy-zA-WY-Z]\s[a-wy-zA-WY-Z]\s', r' ', text)
+    # Remove single letters apart from x, i, u, y ,z
+    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
+    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
+    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
 
     # Concatenate consecutive punctuation groups
     for p in "><!?.()":
