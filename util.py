@@ -42,6 +42,9 @@ def prepare_data(train):
     if train:
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
         X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
+        # Remove duplicate tweets!
+        X_pos = list(dict.fromkeys(X_pos))
+        X_neg = list(dict.fromkeys(X_neg))
         X = X_pos + X_neg
         X = [normalize_sentence(t) for t in X]
         y = np.array([1] * len(X_pos) + [0] * len(X_neg))
