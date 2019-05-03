@@ -1,44 +1,35 @@
-###########################
-# IMPORTS                 #
-###########################
 import re
 import os
 import sys
 import nltk
 import string
-from pathlib import Path
+
 import numpy as np
-from sklearn.model_selection import train_test_split
 import tensorflow.keras as keras
 
-###########################
-# GLOBAL HYPERPARAMETERS  #
-###########################
-TRAIN_DATA_BINARY = os.path.join('datasets', 'train-data.bin.npz')
-TEST_DATA_BINARY = os.path.join('datasets', 'test-data.bin.npz')
-POSITIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_pos_full.txt')
-NEGATIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_neg_full.txt')
-TEST_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'test_data.txt')
-DATA_BINARIES = {True: TRAIN_DATA_BINARY, False: TEST_DATA_BINARY} # not the best convention
-MAX_WORDS = 20000
-MAX_SEQUENCE_LENGTH = 55
-PREDICTION_FILE = 'test_prediction.csv'
+from typing import Tuple, Optional
+from pathlib import Path
+from sklearn.model_selection import train_test_split
+
+from constants import *
+
 # Global tokenizer
 tokenizer = "not specified"
 
-def load_data(train):
-    p = Path(DATA_BINARIES[train])
-    # If the data was already prepared by another run
-    if not p.exists():
-        prepare_data(train=train)
-    d = np.load(str(p))
-    if train:
-        return d['X'], d['y']
-    else:
-        # test data has no labels
-        return d['X']
+def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    path = Path(DATA_BINARIES[train])
 
-def prepare_data(train):
+    # If the data was already prepared by another run
+    if not path.exists():
+        prepare_data(train=train)
+
+    data = np.load(str(path))
+    if train:
+        return data['X'], data['y']
+    else:
+        return data['X'], None
+
+def prepare_data(train : bool) -> None:
     global tokenizer
     if train:
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
@@ -80,7 +71,7 @@ def prepare_data(train):
 
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
-def normalize_sentence(text):
+def normalize_sentence(text : str) -> str:
     # Remove whitespace
     text = re.sub(r'\s+', ' ', text)
 

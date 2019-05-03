@@ -1,5 +1,6 @@
 dict.bin
 word2vec.h5
 datasets/
-model.bin
+models/
 **__pycache__**
+test_prediction.csv
