@@ -3,7 +3,7 @@ import tensorflow.keras as keras
 from constants import *
 
 
-def twitter_model1() -> keras.models.Model:
+def cnnlstm() -> keras.models.Model:
     inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
@@ -11,9 +11,9 @@ def twitter_model1() -> keras.models.Model:
     X = keras.layers.Dropout(1 / 4)(X)
     X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
     X = keras.layers.LSTM(64)(X)
-    X = keras.layers.Dense(2)(X)
+    X = keras.layers.Dense(2, activation='softmax')(X)
 
-    model = keras.models.Model(inputs=inputs, outputs=X, name='TwitterModel1')
+    model = keras.models.Model(inputs=inputs, outputs=X, name='cnnlstm')
     return model
 
 
@@ -44,6 +44,6 @@ def ensemble_models(*models):
 
 
 models = {
-    'twitter_model1' : twitter_model1(),
-    'twitter_model2' : ensemble_models(twitter_model1(), twitter_model2()),
+    'cnnlstm' : cnnlstm(),
+    'cnn2layers' : ensemble_models(cnnlstm(), cnn2layers()),
 }
