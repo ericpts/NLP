@@ -17,18 +17,21 @@ def cnnlstm() -> keras.models.Model:
     return model
 
 
-def twitter_model2() -> keras.models.Model:
+def cnn2layers() -> keras.models.Model:
     inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
     X = inputs
     X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
-    X = keras.layers.Dropout(1 / 4)(X)
-    X = keras.layers.LSTM(64, return_sequences=True)(X)
-    X = keras.layers.Conv1D(64, 5, strides=1, padding='same', activation='relu')(X)
-    X = keras.layers.Reshape((MAX_SEQUENCE_LENGTH * 64, ))(X)
-    X = keras.layers.Dense(2)(X)
+    X = keras.layers.Dropout(0.10)(X)
+    X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
+    X = keras.layers.MaxPooling1D(pool_size=2)(X)
+    X = keras.layers.Conv1D(128, 5, strides=1, padding='valid', activation='relu')(X)
+    X = keras.layers.MaxPooling1D(pool_size=2)(X)
+    X = keras.layers.Flatten()(X)
+    X = keras.layers.Dense(64, activation='relu')(X)
+    X = keras.layers.Dense(2, activation='softmax')(X)
 
-    model = keras.models.Model(inputs=inputs, outputs=X, name='TwitterModel2')
+    model = keras.models.Model(inputs=inputs, outputs=X, name='cnn2layers')
     return model
 
 
