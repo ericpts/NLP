@@ -31,15 +31,6 @@ def twitter_model():
 # MAIN                    #
 ###########################
 def main(notrain):
-    X, y = load_data(train=True)
-    # Split train and val data in a 90-10 split
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1)
-
-    assert X_train.shape[0] == y_train.shape[0]
-    assert X_val.shape[0] == y_val.shape[0]
-    # We can further split the train data to train and validation data
-    print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
-
     if notrain:
         if Path('model.bin').exists():
             model = keras.models.load_model('model.bin')
@@ -48,6 +39,14 @@ def main(notrain):
             print("Model couldn't be loaded from disk!")
             exit(1)
     else:
+        X, y = load_data(train=True)
+        # Split train and val data in a 90-10 split
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1)
+
+        assert X_train.shape[0] == y_train.shape[0]
+        assert X_val.shape[0] == y_val.shape[0]
+        print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
+
         model = twitter_model()
         model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
         model.fit(X_train, y_train, validation_data=(X_val, y_val))
