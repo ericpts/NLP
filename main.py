@@ -37,7 +37,12 @@ def main(retrain: bool) -> None:
                         save_best_only=True,
                         save_weights_only=False,
                         mode='max')
-        callbacks_list = [checkpoint]
+        earlystop = keras.callbacks.EarlyStopping(
+                        monitor='val_loss',
+                        mode='min',
+                        verbose=1,
+                        patience=2)
+        callbacks_list = [checkpoint, earlystop]
 
         model.fit(
             X,
