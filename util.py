@@ -59,11 +59,11 @@ def prepare_data(train : bool) -> None:
 
     X = tokenizer.texts_to_sequences(X)
     # Pad all sentences to a fixed sequence length
-    X = keras.preprocessing.sequence.pad_sequences(
-            X,
-            maxlen=MAX_SEQUENCE_LENGTH,
-            padding='post',
-            truncating='post')
+    # X = keras.preprocessing.sequence.pad_sequences(
+    #         X,
+    #         maxlen=MAX_SEQUENCE_LENGTH,
+    #         padding='post',
+    #         truncating='post')
     if train:
         np.savez(DATA_BINARIES[train], X=X, y=y)
     else:
