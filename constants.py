@@ -19,3 +19,5 @@ TRAIN_TEST_SPLIT_PERCENTAGE = 0.1
 MAX_WORDS = 20000
 # Used for padding the smaller tweets
 MAX_SEQUENCE_LENGTH = 50
+# Arguments provided to the main function
+ARGS = None

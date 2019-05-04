@@ -12,8 +12,9 @@ from util import *
 from models import *
 
 
-def main(model_name: str, retrain: bool) -> None:
-    model_path = 'models/{}.bin'.format(model_name)
+def main(retrain: bool) -> None:
+    global ARGS
+    model_path = 'models/{}.bin'.format(ARGS.model_name)
     if not Path(model_path).exists() or retrain:
         X, y = load_data(train=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
@@ -22,11 +23,19 @@ def main(model_name: str, retrain: bool) -> None:
         assert X_val.shape[0] == y_val.shape[0]
         print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
 
-        model = models[model_name]
+        model = models[ARGS.model_name]
         model.summary()
 
-        model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
-        model.fit(X_train, y_train, validation_data=(X_val, y_val))
+        model.compile(
+            loss='binary_crossentropy',
+            metrics=['accuracy'],
+            optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
+        model.fit(
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
+            epochs=ARGS.epochs,
+            batch_size=ARGS.batch_size)
 
         os.system("mkdir -p models")
         model.save(model_path)
@@ -47,20 +56,28 @@ def main(model_name: str, retrain: bool) -> None:
 
 
 if __name__ == '__main__':
+    global ARGS
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--retrain",
         action='store_true',
         help="Specify this option to not train and use the latest saved model")
     parser.add_argument(
-        'model',
+        "--batch_size",
+        type=int,
+        default=32,
+        help="Batch size to use during training.")
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=1,
+        help="Number of epochs to train for")
+    parser.add_argument(
+        'model_name',
         type=str,
-        help="Model name (e.g. twitter_model1)"
+        help="Model name (e.g. cnnlstm)"
     )
 
-    args = parser.parse_args()
-
-    retrain    = args.retrain
-    model_name = args.model
-
-    main(model_name, retrain)
+    ARGS = parser.parse_args()
+    retrain = ARGS.retrain
+    main(retrain)
