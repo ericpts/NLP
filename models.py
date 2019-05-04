@@ -49,6 +49,20 @@ def cnn1layer() -> keras.models.Model:
     model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
     return model
 
+def multilstm() -> keras.models.Model:
+    inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    X = inputs
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+    X = keras.layers.LSTM(units=1024)(X)
+    X = keras.layers.Dropout(1 / 2)(X)
+    X = keras.layers.Dense(128, activation='relu')(X)
+    X = keras.layers.Dense(2, activation='softmax')(X)
+
+    model = keras.models.Model(inputs=inputs, outputs=X, name='multilstm')
+    return model
+
 
 def ensemble_models(*models):
     model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
