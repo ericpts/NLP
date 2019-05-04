@@ -20,18 +20,32 @@ def main(retrain: bool) -> None:
         assert X.shape[0] == y.shape[0]
 
         model = models[ARGS.model_name]
+        # Prints summary of the model
         model.summary()
-
         model.compile(
             loss='binary_crossentropy',
             metrics=['accuracy'],
             optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
+        # Setup callbacks
+        # Checkpoint
+        filepath= str(ARGS.model_name) + "-{epoch:02d}-{val_acc:.2f}.hdf5"
+        # saved_model = load_model('model.h5')
+        checkpoint = keras.callbacks.ModelCheckpoint(
+                        filepath,
+                        monitor='val_acc',
+                        verbose=1,
+                        save_best_only=True,
+                        save_weights_only=False,
+                        mode='max')
+        callbacks_list = [checkpoint]
+
         model.fit(
             X,
             y,
             validation_split=0.33,
             epochs=ARGS.epochs,
-            batch_size=ARGS.batch_size)
+            batch_size=ARGS.batch_size,
+            callbacks=callbacks_list)
 
         os.system("mkdir -p models")
         model.save(model_path)
