@@ -34,6 +34,21 @@ def cnn2layers() -> keras.models.Model:
     model = keras.models.Model(inputs=inputs, outputs=X, name='cnn2layers')
     return model
 
+def cnn1layer() -> keras.models.Model:
+    inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    X = inputs
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
+    X = keras.layers.MaxPooling1D(pool_size=2)(X)
+    X = keras.layers.Dropout(1 / 3)(X)
+    X = keras.layers.Flatten()(X)
+    X = keras.layers.Dense(128, activation='relu')(X)
+    X = keras.layers.Dense(2, activation='softmax')(X)
+
+    model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
+    return model
+
 
 def ensemble_models(*models):
     model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
