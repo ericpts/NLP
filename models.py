@@ -79,6 +79,21 @@ def cnnlstm2() -> keras.models.Model:
     model = keras.models.Model(inputs=inputs, outputs=X, name='cnnlstm2')
     return model
 
+def lstmcnn() -> keras.models.Model:
+    inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    X = inputs
+    X = keras.layers.Embedding(MAX_WORDS, 128, input_length=MAX_SEQUENCE_LENGTH)(X)
+    X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+    X = keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu', padding='causal')(X)
+    X = keras.layers.MaxPooling1D(pool_size=2)(X)
+    X = keras.layers.Dropout(1 / 3)(X)
+    X = keras.layers.Flatten()(X)
+    X = keras.layers.Dense(64, activation='relu')(X)
+    X = keras.layers.Dense(2, activation='softmax')(X)
+
+    model = keras.models.Model(inputs=inputs, outputs=X, name='lstmcnn')
+    return model
 
 def ensemble_models(*models):
     model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
@@ -93,5 +108,10 @@ def ensemble_models(*models):
 
 models = {
     'cnnlstm' : cnnlstm(),
-    'cnn2layers' : ensemble_models(cnnlstm(), cnn2layers()),
+    'cnn2layers' : cnn2layers(),
+    'cnn1layer': cnn1layer(),
+    'multilstm': multilstm(),
+    'cnnlstm2': cnnlstm2(),
+    'lstmcnn': lstmcnn(),
+    'ensemble' : ensemble_models(cnnlstm(), cnn2layers()),
 }
