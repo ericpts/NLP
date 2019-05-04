@@ -5,6 +5,7 @@ import pandas as pd
 
 from pathlib import Path
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.optimizers import SGD
 
 from constants import *
 from util import *
@@ -24,7 +25,7 @@ def main(model_name: str, retrain: bool) -> None:
         model = models[model_name]
         model.summary()
 
-        model.compile('adam', 'binary_crossentropy', metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
         model.fit(X_train, y_train, validation_data=(X_val, y_val))
 
         os.system("mkdir -p models")
