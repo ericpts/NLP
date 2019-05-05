@@ -44,8 +44,7 @@ def main(retrain: bool) -> None:
                         patience=2)
         tensorboard = keras.callbacks.TensorBoard(
                         log_dir='./logs',
-                        histogram_freq=1,
-                        embeddings_freq=1)
+                        histogram_freq=1)
         callbacks_list = [checkpoint, earlystop, tensorboard]
 
         model.fit(
