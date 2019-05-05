@@ -69,6 +69,33 @@ def prepare_data(train : bool) -> None:
     else:
         np.savez(DATA_BINARIES[train], X=X)
 
+def handle_emojis(text):
+    # Translate common emojis to words to help the model
+    emoji_dictionary = {
+        'happy': [':)', ':D', ';)', ':-)', ':P', '=)', '(:',
+        ';-)', '=D', '=]', ';D', ':]', '^.^', '(y)'],
+        'sad': [':(', ';(', ':/', '=/', '=(', '(n)'],
+        'wow':  [':o'],
+        'love': ['<3'],
+        'kiss': [':*'],
+        'annoyed': ['-_-', '-__-'],
+        'disappointed': ['.__.','._.', ':|'],
+        'laugh': ['XD']}
+    for meaning in emoji_dictionary.keys():
+        for (i, emoji) in enumerate(emoji_dictionary[meaning]):
+            spaced_emoji = ' '.join(list(emoji))
+            text = text.replace(emoji, ' {} '.format(meaning))
+            text = text.replace(spaced_emoji, ' {} '.format(meaning))
+
+    # keep other emojis
+    other_emojis = ['D:',':-','*)', '>.<']
+    for (i, emoji) in enumerate(other_emojis):
+        spaced_emoji = ' '.join(list(emoji))
+        text = text.replace(emoji, ' <emoji{}> '.format(i))
+        text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
+    return text
+
+
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
 def normalize_sentence(text : str) -> str:
@@ -94,17 +121,7 @@ def normalize_sentence(text : str) -> str:
     # Reform Emoijis of the form (<char>) e.g. (y)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
 
-    # keep common emojis
-    common_emojis = [':)', ':D', ':(', ';)', ':-)', ':P', '=)', '(:',
-        ';-)', ':/', 'XD', '=D', ':o', '=]', 'D:', ';D', ':]', ':-',
-        '=/', '=(', '*)', ':*', '._.', ':|', '<3', '>.<', '^.^', '<3',
-        '-_-', '-__-', '.__.']
-
-    # handle emojis
-    for (i, emoji) in enumerate(common_emojis):
-        spaced_emoji = ' '.join(list(emoji))
-        text = text.replace(emoji, ' <emoji{}> '.format(i))
-        text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
+    text = handle_emojis(text)
 
     # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=
     text = re.sub(r' \. ', r' ', text)
