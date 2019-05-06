@@ -27,6 +27,7 @@ def cnn2layers() -> keras.models.Model:
     X = keras.layers.MaxPooling1D(pool_size=2)(X)
     X = keras.layers.Conv1D(128, 5, strides=1, padding='valid', activation='relu')(X)
     X = keras.layers.MaxPooling1D(pool_size=2)(X)
+    X = keras.layers.Dropout(1 / 2)(X)
     X = keras.layers.Flatten()(X)
     X = keras.layers.Dense(64, activation='relu')(X)
     X = keras.layers.Dense(2, activation='softmax')(X)

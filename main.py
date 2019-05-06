@@ -35,7 +35,7 @@ def main(retrain: bool) -> None:
                         monitor='val_acc',
                         verbose=1,
                         save_best_only=True,
-                        save_weights_only=False,
+                        save_weights_only=True,
                         mode='max')
         earlystop = keras.callbacks.EarlyStopping(
                         monitor='val_loss',
