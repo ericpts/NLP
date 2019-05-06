@@ -10,6 +10,16 @@ from util import *
 class Word2Vec:
 
     @staticmethod
+    def load_embedding():
+
+        model = gensim.models.Word2Vec.load("word2vecTrainTest.model")
+        print('man:', model['man'])
+        print('woman:', model['woman'])
+        print('king:', model['king'])
+        print('queen:',model['queen'])
+        print('res:', model['king'] - model['man'] + model['woman'])
+
+    @staticmethod
     def map_extra_symbols(text):
         emoji_dictionary = {
             'exclamation': [i * '!' for i in range(1, 11, 1)],
@@ -40,3 +50,5 @@ if __name__ == '__main__':
     X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
     X_test = Path(TEST_DATA_FILE).read_text().split('\n')[:-1] # Remove the index
     s = Word2Vec.learn_embeddings([X_pos, X_neg, X_test])
+    print('LOADING EMBEDDING')
+    Word2Vec.load_embedding()
