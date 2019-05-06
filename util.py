@@ -160,6 +160,6 @@ def normalize_sentence(text : str) -> str:
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text)
      # lematize everything as verbs, need to pass then individually
-    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word, 'v') for word in text.split())
+    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
 
     return text
