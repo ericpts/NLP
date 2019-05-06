@@ -80,7 +80,8 @@ def handle_emojis(text):
         'kiss': [':*'],
         'annoyed': ['-_-', '-__-'],
         'disappointed': ['.__.','._.', ':|'],
-        'laugh': ['XD']}
+        'laugh': ['XD'],
+        'tears of joy': [";')", ":')"]}
     for meaning in emoji_dictionary.keys():
         for (i, emoji) in enumerate(emoji_dictionary[meaning]):
             spaced_emoji = ' '.join(list(emoji))
