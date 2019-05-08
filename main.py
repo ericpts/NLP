@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 import tensorflow.keras as keras
 from tensorflow.keras.optimizers import SGD
+from sklearn.model_selection import train_test_split
 
 from constants import *
 from util import *
@@ -17,7 +18,12 @@ def main(retrain: bool) -> None:
     model_path = 'models/{}.bin'.format(ARGS.model_name)
     if not Path(model_path).exists() or retrain:
         X, y = load_data(train=True)
-        assert X.shape[0] == y.shape[0]
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
+
+        assert X_train.shape[0] == y_train.shape[0]
+        assert X_val.shape[0] == y_val.shape[0]
+        print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
+
 
         model = models[ARGS.model_name]
         # Prints summary of the model
@@ -48,9 +54,9 @@ def main(retrain: bool) -> None:
         callbacks_list = [checkpoint, earlystop, tensorboard]
 
         model.fit(
-            X,
-            y,
-            validation_split=0.33,
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
             epochs=ARGS.epochs,
             batch_size=ARGS.batch_size,
             callbacks=callbacks_list)
