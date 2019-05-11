@@ -77,12 +77,13 @@ def prepare_data(train : bool) -> None:
             tokenizer.fit_on_texts(X_train)
 
     X = tokenizer.texts_to_sequences(X)
+    word_index = tokenizer.word_index
+    save_object(word_index, 'word_index')
+
     # Pad all sentences to a fixed sequence length
-    # X = keras.preprocessing.sequence.pad_sequences(
-    #         X,
-    #         maxlen=MAX_SEQUENCE_LENGTH,
-    #         padding='post',
-    #         truncating='post')
+    X = keras.preprocessing.sequence.pad_sequences(
+            X,
+            maxlen=MAX_SEQUENCE_LENGTH)
     if train:
         np.savez(DATA_BINARIES[train], X=X, y=y)
     else:
@@ -114,7 +115,6 @@ def handle_emojis(text):
         text = text.replace(emoji, ' <emoji{}> '.format(i))
         text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
     return text
-
 
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
@@ -178,7 +178,7 @@ def normalize_sentence(text : str) -> str:
 
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text)
-     # lematize everything as verbs, need to pass then individually
+    # Lematize, need to pass words individually
     text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
 
     return text
