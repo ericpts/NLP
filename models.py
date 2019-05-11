@@ -18,3 +18,11 @@ class ModelBuilder():
             'cnnlstm2': ModelBuilder.cnnlstm2,
             'lstmcnn': ModelBuilder.lstmcnn,
         }
+
+    @staticmethod
+    def create_model(name, usePretrainedEmbeddings=True):
+        if name not in ModelBuilder.models:
+            print("Model {} not defined in the model_builder!".format(name))
+            exit(1)
+
+        return ModelBuilder.models[name]()
