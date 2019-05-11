@@ -3,7 +3,7 @@ import os
 import sys
 import nltk
 import string
-
+import pickle
 import numpy as np
 import tensorflow.keras as keras
 
@@ -15,6 +15,25 @@ from constants import *
 
 # Global tokenizer
 tokenizer = "not specified"
+
+def save_object(obj, name):
+    '''
+        Saves 'obj' object in the OBJECT_DIRECTORY with the provided 'name'
+        Args:
+        obj            Object to be saved
+        name           Name to be given to the file
+    '''
+    with open(name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_object(name):
+    '''
+        Loads object with the provided 'name' from the OBJECT_DIRECTORY
+        Args:
+        name           Name of object to be loaded
+    '''
+    with open(name + '.pkl', 'rb') as f:
+        return pickle.load(f)
 
 def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     path = Path(DATA_BINARIES[train])
