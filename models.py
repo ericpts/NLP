@@ -38,3 +38,14 @@ class ModelBuilder():
                     ModelBuilder.embedding_matrix[idx] = embeddings_index[word]
 
         return ModelBuilder.models[name]()
+
+    @staticmethod
+    def getEmbeddingLayer(input):
+        if not ModelBuilder.usePretrainedEmbeddings:
+            return keras.layers.Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LENGTH)(input)
+        else:
+            return keras.layers.Embedding(len(ModelBuilder.word_index) + 1,
+                                       EMBEDDING_DIM,
+                                       weights=[ModelBuilder.embedding_matrix],
+                                       input_length=MAX_SEQUENCE_LENGTH,
+                                       trainable=False)(input)
