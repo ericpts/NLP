@@ -12,6 +12,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 
 from constants import *
+from models import ModelBuilder
 
 # Global tokenizer
 tokenizer = "not specified"
@@ -41,6 +42,8 @@ def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     # If the data was already prepared by another run
     if not path.exists():
         prepare_data(train=train)
+
+    ModelBuilder.word_index = load_object('word_index')
 
     data = np.load(str(path))
     if train:

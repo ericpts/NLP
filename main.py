@@ -17,21 +17,23 @@ def main(retrain: bool) -> None:
     global ARGS
     model_path = 'models/{}.bin'.format(ARGS.model_name)
     if not Path(model_path).exists() or retrain:
+        # Load and split data
         X, y = load_data(train=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
-
         assert X_train.shape[0] == y_train.shape[0]
         assert X_val.shape[0] == y_val.shape[0]
         print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
 
-
-        model = models[ARGS.model_name]
+        # Create model
+        ModelBuilder.initialize()
+        model = ModelBuilder.create_model(ARGS.model_name, ARGS.pretrained_embeddings)
         # Prints summary of the model
         model.summary()
         model.compile(
             loss='binary_crossentropy',
             metrics=['accuracy'],
             optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
+
         # Setup callbacks
         # Checkpoint
         filepath= str(ARGS.model_name) + "-{epoch:02d}-{val_acc:.2f}.hdf5"
@@ -51,7 +53,7 @@ def main(retrain: bool) -> None:
         tensorboard = keras.callbacks.TensorBoard(
                         log_dir='./logs',
                         histogram_freq=1)
-        callbacks_list = [checkpoint, earlystop, tensorboard]
+        callbacks_list = [checkpoint, tensorboard]
 
         model.fit(
             X_train,
