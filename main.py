@@ -87,6 +87,10 @@ if __name__ == '__main__':
         action='store_true',
         help="Specify this option to not train and use the latest saved model")
     parser.add_argument(
+        "--pretrained_embeddings",
+        action='store_true',
+        help="Specify this option to use pretrained embeddings instead of training new ones")
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=32,
