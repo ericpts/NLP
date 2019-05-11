@@ -40,6 +40,14 @@ class ModelBuilder():
         return ModelBuilder.models[name]()
 
     @staticmethod
+    def create_ensemble(names, usePretrainedEmbeddings=True):
+        '''
+        Expect names of models in the ensemble
+        '''
+        models = [ModelBuilder.create_model(name, usePretrainedEmbeddings) for name in names]
+        return ModelBuilder.ensemble_model(models)
+
+    @staticmethod
     def getEmbeddingLayer(input):
         if not ModelBuilder.usePretrainedEmbeddings:
             return keras.layers.Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LENGTH)(input)
@@ -151,3 +159,14 @@ class ModelBuilder():
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='lstmcnn')
         return model
+
+    @staticmethod
+    def ensemble_model(*models) -> keras.models.Model:
+        model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        # Collect outputs of models
+        outputs = [model(model_input) for model in models]
+        # Average outputs
+        avg_output = keras.layers.average(outputs)
+        # Build model from same input and avg output
+        modelEns = keras.models.Model(inputs=model_input, outputs=avg_output, name='ensemble')
+        return modelEns
