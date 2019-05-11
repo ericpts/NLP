@@ -22,4 +22,4 @@ MAX_SEQUENCE_LENGTH = 50
 # Arguments provided to the main function
 ARGS = None
 # Embedding dimension of words
-EMBEDDING_DIM = 128
+EMBEDDING_DIM = 100
