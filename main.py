@@ -66,9 +66,11 @@ def main(retrain: bool) -> None:
         os.system("mkdir -p models")
         model.save(model_path)
         print("Model {} saved!".format(model_path))
-
-    model = keras.models.load_model(model_path)
-    print('Loaded model from disk.')
+    else:
+        print("Loading previously trained .bin model from models/")
+        print("You can specify a checkpoint to load from with --load")
+        model = keras.models.load_model(model_path)
+        print('Model loaded from disk.')
 
     # Predict using the test data
     X_test, _ = load_data(train=False)
