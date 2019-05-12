@@ -87,9 +87,9 @@ if __name__ == '__main__':
     global ARGS
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--retrain",
+        "--eval",
         action='store_true',
-        help="Specify this option to not train and use the latest saved model")
+        help="Specify this option to not train but only eval using the last saved model or a specific checkpoint with --load")
     parser.add_argument(
         "--pretrained_embeddings",
         action='store_true',
