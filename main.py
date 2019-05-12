@@ -105,11 +105,14 @@ if __name__ == '__main__':
         default=1,
         help="Number of epochs to train for")
     parser.add_argument(
+        "--load",
+        type=str,
+        help="Specify some checkpoint to load. Specify the .hdf5 file without .data or .index afterwards")
+    parser.add_argument(
         'model_name',
         type=str,
         help="Model name (e.g. cnnlstm)"
     )
 
     ARGS = parser.parse_args()
-    retrain = ARGS.retrain
-    main(retrain)
+    main()
