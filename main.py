@@ -13,10 +13,26 @@ from util import *
 from models import *
 
 
-def main(retrain: bool) -> None:
+def main() -> None:
     global ARGS
-    model_path = 'models/{}.bin'.format(ARGS.model_name)
-    if not Path(model_path).exists() or retrain:
+    model_path = os.path.join('models','{}.bin'.format(ARGS.model_name))
+    # Create model
+    ModelBuilder.initialize()
+    model = ModelBuilder.create_model(ARGS.model_name, ARGS.pretrained_embeddings)
+
+    if ARGS.load != None:
+        print("Loading model weights from: {}".format(ARGS.load))
+        model.load_weights(filepath=ARGS.load)
+        print("Model loaded from disk!")
+
+    # Prints summary of the model
+    model.summary()
+    model.compile(
+        loss='binary_crossentropy',
+        metrics=['accuracy'],
+        optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
+
+    if not ARGS.eval:
         # Load and split data
         X, y = load_data(train=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
@@ -24,22 +40,11 @@ def main(retrain: bool) -> None:
         assert X_val.shape[0] == y_val.shape[0]
         print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
 
-        # Create model
-        ModelBuilder.initialize()
-        model = ModelBuilder.create_model(ARGS.model_name, ARGS.pretrained_embeddings)
-        # Prints summary of the model
-        model.summary()
-        model.compile(
-            loss='binary_crossentropy',
-            metrics=['accuracy'],
-            optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
-
         # Setup callbacks
         # Checkpoint
         filepath= str(ARGS.model_name) + "-{epoch:02d}-{val_acc:.2f}.hdf5"
-        # saved_model = load_model('model.h5')
         checkpoint = keras.callbacks.ModelCheckpoint(
-                        filepath,
+                        os.path.join('.', filepath),
                         monitor='val_acc',
                         verbose=1,
                         save_best_only=True,
