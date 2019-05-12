@@ -18,6 +18,7 @@ class ModelBuilder():
             'multilstm': ModelBuilder.multilstm,
             'cnnlstm2': ModelBuilder.cnnlstm2,
             'lstmcnn': ModelBuilder.lstmcnn,
+            'nlp': ModelBuilder.nlp,
         }
         with open('word_index.pkl', 'rb') as f:
             ModelBuilder.word_index = pickle.load(f)
@@ -162,6 +163,28 @@ class ModelBuilder():
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='lstmcnn')
         return model
+
+    @staticmethod
+    def nlp() -> keras.models.Model:
+        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        X = ModelBuilder.getEmbeddingLayer(X)
+        bigram_branch = keras.layers.Conv1D(filters=100, kernel_size=2, padding='valid', activation='relu', strides=1)(X)
+        bigram_branch = keras.layers.GlobalMaxPooling1D()(bigram_branch)
+        trigram_branch = keras.layers.Conv1D(filters=100, kernel_size=3, padding='valid', activation='relu', strides=1)(X)
+        trigram_branch = keras.layers.GlobalMaxPooling1D()(trigram_branch)
+        fourgram_branch = keras.layers.Conv1D(filters=100, kernel_size=4, padding='valid', activation='relu', strides=1)(X)
+        fourgram_branch = keras.layers.GlobalMaxPooling1D()(fourgram_branch)
+        merged = keras.layers.concatenate([bigram_branch, trigram_branch, fourgram_branch], axis=1)
+
+        merged = keras.layers.Dense(256, activation='relu')(merged)
+        merged = keras.layers.Dropout(0.2)(merged)
+        merged = keras.layers.Dense(2, activation='softmax')(merged) # TODO: make 1
+        model = keras.models.Model(inputs=inputs, outputs=merged, name='nlp')
+        return model
+
+
 
     @staticmethod
     def ensemble_model(*models) -> keras.models.Model:
