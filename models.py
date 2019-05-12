@@ -51,15 +51,15 @@ class ModelBuilder():
         return ModelBuilder.ensemble_model(models)
 
     @staticmethod
-    def getEmbeddingLayer(input):
+    def getEmbeddingLayer(inputs):
         if not ModelBuilder.usePretrainedEmbeddings:
-            return keras.layers.Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LENGTH)(input)
+            return keras.layers.Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LENGTH)(inputs)
         else:
             return keras.layers.Embedding(len(ModelBuilder.word_index) + 1,
                                        EMBEDDING_DIM,
                                        weights=[ModelBuilder.embedding_matrix],
                                        input_length=MAX_SEQUENCE_LENGTH,
-                                       trainable=False)(input)
+                                       trainable=False)(inputs)
 
     @staticmethod
     def cnnlstm() -> keras.models.Model:
@@ -117,7 +117,7 @@ class ModelBuilder():
         X = ModelBuilder.getEmbeddingLayer(X)
         X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
         X = keras.layers.LSTM(units=1024)(X)
-        X = keras.layers.Dropout(1 / 2)(X)
+        X = keras.layers.Dropout(0.5)(X)
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(2, activation='softmax')(X)
 
