@@ -1,7 +1,8 @@
 import tensorflow.keras as keras
-from constants import *
 from gensim.models import Word2Vec
+import pickle
 import numpy as np
+from constants import *
 
 class ModelBuilder():
     embedding_matrix = None
@@ -18,6 +19,8 @@ class ModelBuilder():
             'cnnlstm2': ModelBuilder.cnnlstm2,
             'lstmcnn': ModelBuilder.lstmcnn,
         }
+        with open('word_index.pkl', 'rb') as f:
+            ModelBuilder.word_index = pickle.load(f)
 
     @staticmethod
     def create_model(name, usePretrainedEmbeddings=True):

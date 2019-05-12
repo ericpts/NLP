@@ -43,8 +43,6 @@ def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     if not path.exists():
         prepare_data(train=train)
 
-    ModelBuilder.word_index = load_object('word_index')
-
     data = np.load(str(path))
     if train:
         return data['X'], data['y']
