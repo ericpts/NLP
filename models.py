@@ -59,7 +59,7 @@ class ModelBuilder():
                                        EMBEDDING_DIM,
                                        weights=[ModelBuilder.embedding_matrix],
                                        input_length=MAX_SEQUENCE_LENGTH,
-                                       trainable=False)(inputs)
+                                       trainable=True)(inputs)
 
     @staticmethod
     def cnnlstm() -> keras.models.Model:
