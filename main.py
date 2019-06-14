@@ -75,7 +75,7 @@ def main() -> None:
         os.system("mkdir -p models")
         model.save(model_path)
         print("Model {} saved!".format(model_path))
-    else:
+    elif ARGS.load is None:
         print("Loading previously trained .bin model from models/")
         print("You can specify a checkpoint to load from with --load")
         model = keras.models.load_model(model_path)

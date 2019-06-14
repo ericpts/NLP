@@ -1,3 +1,6 @@
+*.pkl
+logs/
+checkpoints/
 dict.bin
 *.swp
 word2vec.h5
