@@ -1,18 +1,16 @@
 import re
-import os
-import sys
 import nltk
 import string
 import pickle
 import numpy as np
 import tensorflow.keras as keras
 
+
 from typing import Tuple, Optional
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 
 from constants import *
-from models import ModelBuilder
+
 
 # Global tokenizer
 tokenizer = "not specified"
@@ -36,12 +34,26 @@ def load_object(name):
     with open(name + '.pkl', 'rb') as f:
         return pickle.load(f)
 
-def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
-    path = Path(DATA_BINARIES[train])
+def load_data(
+        train : bool,
+        as_text: bool = False,
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    '''
+
+    train: Whether we want the training data.
+    as_text:
+        True if we should return the data as a list of strings.
+        False if the data should be returned as a list of integers, where each integer uniquely identifies a token.
+    '''
+
+    if as_text:
+        path = Path(DATA_TEXT[train])
+    else:
+        path = Path(DATA_BINARIES[train])
 
     # If the data was already prepared by another run
     if not path.exists():
-        prepare_data(train=train)
+        prepare_data(train=train, as_text=as_text)
 
     data = np.load(str(path))
     if train:
@@ -49,18 +61,19 @@ def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     else:
         return data['X'], None
 
-def prepare_data(train : bool) -> None:
+def prepare_data(train: bool, as_text: bool) -> None:
     global tokenizer
     if train:
         X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
         X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
+
         # Remove duplicate tweets!
         X_pos = list(dict.fromkeys(X_pos))
         X_neg = list(dict.fromkeys(X_neg))
         X = X_pos + X_neg
         X = [normalize_sentence(t) for t in X]
         y = np.array([1] * len(X_pos) + [0] * len(X_neg))
-        y = keras.utils.to_categorical(y, num_classes=2)
+
         # Allow a maximum of different words
         tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
         tokenizer.fit_on_texts(X)
@@ -76,6 +89,20 @@ def prepare_data(train : bool) -> None:
             X_train = [normalize_sentence(t) for t in X_train]
             tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
             tokenizer.fit_on_texts(X_train)
+
+    if as_text:
+        if train:
+            np.savez(
+                TRAIN_DATA_TEXT,
+                X=X,
+                y=y
+            )
+        else:
+            np.savez(
+                TEST_DATA_TEXT,
+                X=X
+            )
+        return
 
     X = tokenizer.texts_to_sequences(X)
     word_index = tokenizer.word_index
@@ -116,6 +143,7 @@ def handle_emojis(text):
         text = text.replace(emoji, ' <emoji{}> '.format(i))
         text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
     return text
+
 
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already

@@ -4,3 +4,6 @@ datasets/
 models/
 **__pycache__**
 test_prediction.csv
+.venv/
+venv/
+word_index.pkl
