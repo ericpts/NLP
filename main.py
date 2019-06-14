@@ -5,7 +5,7 @@ import pandas as pd
 
 from pathlib import Path
 import tensorflow.keras as keras
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD, Adam
 from sklearn.model_selection import train_test_split
 
 from constants import *
@@ -31,7 +31,10 @@ def main() -> None:
     model.compile(
         loss='binary_crossentropy',
         metrics=['accuracy'],
-        optimizer=SGD(lr=0.01, momentum=0.9, clipnorm=5.0))
+        optimizer=Adam(
+            lr=.001,
+            decay=.0, # no decay for now
+            ))
 
     if not ARGS.eval:
         # Load and split data
