@@ -17,7 +17,8 @@ from models import ModelBuilder
 # Global tokenizer
 tokenizer = "not specified"
 
-def save_object(obj, name):
+
+def save_object(obj : object, name : str) -> None:
     '''
         Saves 'obj' object in the OBJECT_DIRECTORY with the provided 'name'
         Args:
@@ -27,7 +28,8 @@ def save_object(obj, name):
     with open(name + '.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-def load_object(name):
+
+def load_object(name : str) -> object:
     '''
         Loads object with the provided 'name' from the OBJECT_DIRECTORY
         Args:
@@ -35,6 +37,7 @@ def load_object(name):
     '''
     with open(name + '.pkl', 'rb') as f:
         return pickle.load(f)
+
 
 def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     path = Path(DATA_BINARIES[train])
@@ -48,6 +51,7 @@ def load_data(train : bool) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         return data['X'], data['y']
     else:
         return data['X'], None
+
 
 def prepare_data(train : bool) -> None:
     global tokenizer
@@ -90,7 +94,8 @@ def prepare_data(train : bool) -> None:
     else:
         np.savez(DATA_BINARIES[train], X=X)
 
-def handle_emojis(text):
+
+def handle_emojis(text : str) -> str:
     # Translate common emojis to words to help the model
     emoji_dictionary = {
         'happy': [':)', ':D', ';)', ':-)', ':P', '=)', '(:',
@@ -116,6 +121,7 @@ def handle_emojis(text):
         text = text.replace(emoji, ' <emoji{}> '.format(i))
         text = text.replace(spaced_emoji, ' <emoji{}> '.format(i))
     return text
+
 
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already

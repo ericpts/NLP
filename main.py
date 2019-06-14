@@ -16,6 +16,7 @@ from models import *
 def main() -> None:
     global ARGS
     model_path = os.path.join('models','{}.bin'.format(ARGS.model_name))
+    
     # Create model
     ModelBuilder.initialize()
     model = ModelBuilder.create_model(ARGS.model_name, ARGS.pretrained_embeddings)

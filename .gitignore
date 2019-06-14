@@ -1,4 +1,5 @@
 dict.bin
+*.swp
 word2vec.h5
 datasets/
 models/
