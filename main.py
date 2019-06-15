@@ -47,7 +47,7 @@ def get_callbacks(model_name: str) -> Callback:
     # Setup tensorboard
     tensorboard = keras.callbacks.TensorBoard(
         log_dir='./logs',
-        histogram_freq=1,
+        histogram_freq=1 if model_name not in ["elmo"] else 0,
         update_freq=10000,
     )
 
@@ -79,7 +79,7 @@ def main(args: argparse.Namespace) -> None:
 
     if not args.eval:
         # Load and split data
-        X, y = load_data(train=True, as_text=args.as_text)
+        X, y = load_data(train=True, as_text=args.text_input)
         X_train, X_val, y_train, y_val = \
             train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
         assert X_train.shape[0] == y_train.shape[0]
@@ -107,7 +107,7 @@ def main(args: argparse.Namespace) -> None:
         print('Model loaded from disk.')
 
     # Predict using the test data
-    X_test, _ = load_data(train=False, as_text=args.as_text)
+    X_test, _ = load_data(train=False, as_text=args.text_input)
     y_pred = model.predict(X_test).argmax(axis=-1)
     y_pred = [-1 if pred == 0 else pred for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         type=str,
         help="Specify some checkpoint to load. Specify the .hdf5 file without .data or .index afterwards")
     parser.add_argument(
-        "--as-text",
+        "--text-input",
         action='store_true',
         help="Use raw text for training."
     )

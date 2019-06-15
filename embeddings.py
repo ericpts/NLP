@@ -135,8 +135,8 @@ class ElmoEmbedding(Embedding):
         return []
 
     @staticmethod
-    def layer() -> Layer:
-        return ElmoEmbeddingLayer()
+    def layer(trainable = True) -> Layer:
+        return ElmoEmbeddingLayer(trainable=trainable)
 
 
 class DefaultEmbedding(Embedding):
