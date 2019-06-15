@@ -42,10 +42,29 @@ function get_id() {
 
 function push_source() {
 	get_id
+	BRANCH=`git branch | grep \* | cut -d ' ' -f2`
+	# sync current branch
+	ssh -tt $ID <<- ENDSSH
+		cd NLP
+		git stash
+		git checkout $BRANCH
+		git pull
+		exit
+	ENDSSH
+	# copy local modifications
+	FILES=`git ls-files`
+	scp $FILES $ID:NLP
 }
 
 function pull_data() {
 	get_id
+
+	mkdir -p remote/$CLUSTER
+
+	# sync data files
+	rsync -h -v -r -P -t $ID:NLP/logs remote/$CLUSTER
+	rsync -h -v -r -P -t $ID:NLP/models remote/$CLUSTER
+	rsync -h -v -r -P -t $ID:NLP/checkpoints remote/$CLUSTER
 }
 
 function bsub() {
@@ -133,4 +152,6 @@ function parse_command_line_options() {
 	usage
 }
 
+pushd $DIR > /dev/null
 parse_command_line_options "$@"
+popd > /dev/null
