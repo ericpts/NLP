@@ -6,9 +6,17 @@ POSITIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_p
 NEGATIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_neg_full.txt')
 TEST_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'test_data.txt')
 
+TRAIN_DATA_TEXT = os.path.join('datasets', 'text-train-data.bin.npz')
+TEST_DATA_TEXT = os.path.join('datasets', 'text-test-data.bin.npz')
+
 DATA_BINARIES = {
     True: TRAIN_DATA_BINARY,
     False: TEST_DATA_BINARY
+}
+
+DATA_TEXT = {
+    True: TRAIN_DATA_TEXT,
+    False: TEST_DATA_TEXT
 }
 
 PREDICTION_FILE = 'test_prediction.csv'
