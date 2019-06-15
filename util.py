@@ -38,14 +38,15 @@ def load_object(name : str) -> object:
 
 
 def load_data(
-        train : bool,
-        as_text: bool = False,
+    train : bool,
+    as_text: bool = False,
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     '''
     train: Whether we want the training data.
     as_text:
         True if we should return the data as a list of strings.
-        False if the data should be returned as a list of integers, where each integer uniquely identifies a token.
+        False if the data should be returned as a list of integers, where each
+            integer uniquely identifies a token.
     '''
 
     if as_text:
@@ -159,7 +160,7 @@ def normalize_sentence(text : str) -> str:
 
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
-    
+
     # Specifics to the dataset
     text = re.sub(r'\( . . . \)', r' ', text)
     text = re.sub(r',', r'', text)

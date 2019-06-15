@@ -5,3 +5,4 @@ pandas
 nltk
 pandas
 tensorflow_hub
+keras>=2.1.0

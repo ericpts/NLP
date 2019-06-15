@@ -16,7 +16,7 @@ function usage() {
 	printf "\t %- 30s %s\n" "-u | --user" "Specify user name(e.g. aledan)"
     printf "\t %- 30s %s\n" "-c | --cluster" "Specify cluster name(e.g. euler)"
     printf "\t %- 30s %s\n" "-p | --push" "Pushes code to cluster."
-    printf "\t %- 30s %s\n" "-d | --pull" "Create topic."
+    printf "\t %- 30s %s\n" "-d | --pull" "Pull data from cluster."
 	printf "\t %- 30s %s\n" "-bsub"
 	printf "\t %- 30s %s\n" "-bbjobs"
 	printf "\t %- 30s %s\n" "-bkill"

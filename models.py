@@ -4,30 +4,28 @@ import pickle
 import numpy as np
 
 from constants import *
-from gensim.models import Word2Vec
 from typing import List
 
-from keras.layers import Dense, Input, PReLU, Dropout
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
 
 
 class Models:
     @staticmethod
     def elmo() -> keras.models.Model:
-        inputs = Input(shape=(1, ), name='input', dtype=tf.string)
+        inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
         X = inputs
 
         X = ElmoEmbedding.layer()(X)
-        X = Dense(512, activation='relu')(X)
-        X = Dropout(0.3)(X)
-        X = Dense(1, activation='sigmoid')(X)
+        X = keras.layers.Dense(512, activation='relu')(X)
+        X = keras.layers.Dropout(0.3)(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='elmo')
         return model
 
     @staticmethod
     def simple_rnn() -> keras.models.Model:
-        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
         X = DefaultEmbedding.layer()(X)
@@ -61,7 +59,7 @@ class ModelBuilder:
         return ModelBuilder.ensemble_model(models)
 
     @staticmethod
-    def ensemble_model(*models) -> keras.models.Model:
+    def ensemble_model(*models: List[keras.models.Model]) -> keras.models.Model:
         model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
         # Collect outputs of models
         outputs = [model(model_input) for model in models]
