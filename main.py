@@ -62,8 +62,7 @@ def main(args: argparse.Namespace) -> None:
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model
-    ModelBuilder.initialize()
-    model = ModelBuilder.create_model(args.model_name, args.pretrained_embeddings)
+    model = ModelBuilder.create_model(args.model_name)
 
     if args.load != None:
         print("Loading model weights from: {}".format(args.load))
@@ -122,10 +121,6 @@ if __name__ == '__main__':
         "--eval",
         action='store_true',
         help="Specify this option to not train but only eval using the last saved model or a specific checkpoint with --load")
-    parser.add_argument(
-        "--pretrained_embeddings",
-        action='store_true',
-        help="Specify this option to use pretrained embeddings instead of training new ones")
     parser.add_argument(
         "--batch_size",
         type=int,

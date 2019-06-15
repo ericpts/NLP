@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import keras.backend as K
 import numpy as np
+import keras.layers as layers
 
 from pathlib import Path
 from gensim import models
@@ -23,8 +24,37 @@ class Embedding(object):
     def learn_embeddings(files : List[str]) -> List[str]:
         raise NotImplementedError()
 
+    @staticmethod
+    def layer() -> Layer:
+        raise NotImplementedError()
+
 
 class Word2Vec(Embedding):
+    embedding_matrix = None
+
+    @staticmethod
+    def layer() -> Layer:
+        with open('word_index.pkl', 'rb') as f:
+            word_index = pickle.load(f)
+
+        w2vmodel = gensim.models.Word2Vec.load("models/word2vecTrainTest.model")
+        embeddings_index = w2vmodel.wv
+        num_words = len(word_index) + 1
+
+        # Map each word to an embedding, initially all of which are zeros
+        embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
+        for word, idx in word_index.items():
+            if word in embeddings_index.vocab:
+                # Words not in the embedding index are all 0
+                embedding_matrix[idx] = embeddings_index[word]
+
+        return layers.Embedding(
+            len(word_index) + 1,
+            EMBEDDING_DIM,
+            weights=[embedding_matrix],
+            input_length=MAX_SEQUENCE_LENGTH,
+            trainable=True)
+
     @staticmethod
     def debug_embedding() -> None:
         model = gensim.models.Word2Vec.load("models/word2vecTrainTest.model")
@@ -33,7 +63,6 @@ class Word2Vec(Embedding):
         print('king:', model['king'])
         print('queen:',model['queen'])
         print('res:', model['king'] - model['man'] + model['woman'])
-
 
     @staticmethod
     def __map_extra_symbols(text : str) -> str:
@@ -48,7 +77,6 @@ class Word2Vec(Embedding):
                 text = text.replace(emoji, ' {} '.format(meaning))
                 text = text.replace(spaced_emoji, ' {} '.format(meaning))
         return text
-
 
     @staticmethod
     def learn_embeddings(files : List[str]) -> List[str]:
@@ -77,7 +105,6 @@ class ElmoEmbeddingLayer(Layer):
         self.trainable = trainable
         super(ElmoEmbeddingLayer, self).__init__(**kwargs)
 
-
     def build(self, input_shape):
         self.elmo = hub.Module(
             'https://tfhub.dev/google/elmo/2',
@@ -87,7 +114,6 @@ class ElmoEmbeddingLayer(Layer):
         self.trainable_weights += K.tf.trainable_variables(scope="^{}_module/.*".format(self.name))
         super(ElmoEmbeddingLayer, self).build(input_shape)
 
-
     def call(self, x, mask=None):
         result = self.elmo(
             K.squeeze(K.cast(x, tf.string), axis=1),
@@ -96,32 +122,36 @@ class ElmoEmbeddingLayer(Layer):
         )['default']
         return result
 
-
     def compute_mask(self, inputs, mask=None):
         return K.not_equal(inputs, '--PAD--')
-
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.dimensions)
 
 
-def gen_model():
-    inputs = Input(shape=(1, ), name='input', dtype=tf.string)
-    X = inputs
+class ElmoEmbedding(Embedding):
+    @staticmethod
+    def learn_embeddings(files : List[str]) -> List[str]:
+        return []
 
-    X = ElmoEmbeddingLayer()(X)
+    @staticmethod
+    def layer() -> Layer:
+        return ElmoEmbeddingLayer()
 
-    X = Dense(512, activation='relu')(X)
-    X = Dropout(0.3)(X)
-    X = Dense(1, activation='sigmoid')(X)
 
-    model = Model(
-        inputs=inputs,
-        outputs=X,
-        name='elmo'
-    )
+class DefaultEmbedding(Embedding):
+    @staticmethod
+    def learn_embeddings(files : List[str]) -> List[str]:
+        return []
 
-    return model
+    @staticmethod
+    def layer() -> Layer:
+        return layers.Embedding(
+            MAX_WORDS,
+            EMBEDDING_DIM,
+            input_length=MAX_SEQUENCE_LENGTH,
+        )
+
 
 if __name__ == '__main__':
     embeddings = {
