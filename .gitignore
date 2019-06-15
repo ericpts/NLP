@@ -11,3 +11,4 @@ test_prediction.csv
 .venv/
 venv/
 word_index.pkl
+remote/

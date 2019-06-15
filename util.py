@@ -159,7 +159,7 @@ def normalize_sentence(text : str) -> str:
 
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
-
+    
     # Specifics to the dataset
     text = re.sub(r'\( . . . \)', r' ', text)
     text = re.sub(r',', r'', text)

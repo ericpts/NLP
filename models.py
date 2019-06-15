@@ -30,11 +30,10 @@ class Models:
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
-        X = Word2Vec.layer()(X)
+        X = DefaultEmbedding.layer()(X)
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.LSTM(
-            units=MAX_SEQUENCE_LENGTH,
-            input_shape=(EMBEDDING_DIM, 1))(X) # [TODO]: do I need recurrent dropout?
+            units=MAX_SEQUENCE_LENGTH)(X) # [TODO]: do I need recurrent dropout?
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(2, activation='softmax')(X)
 
