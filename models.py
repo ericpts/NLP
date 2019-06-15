@@ -1,4 +1,5 @@
-import tensorflow.keras as keras
+import keras
+import tensorflow as tf
 import pickle
 import numpy as np
 
@@ -6,6 +7,8 @@ from constants import *
 from gensim.models import Word2Vec
 from typing import List
 
+from keras.layers import Dense, Input, PReLU, Dropout
+from embeddings import ElmoEmbeddingLayer
 
 class ModelBuilder():
     embedding_matrix = None
@@ -17,6 +20,7 @@ class ModelBuilder():
     def initialize():
         ModelBuilder.models = {
             'simple-rnn' : ModelBuilder.simple_rnn,
+            'elmo' : ModelBuilder.elmo,
         }
         try:
             with open('word_index.pkl', 'rb') as f:
@@ -39,7 +43,7 @@ class ModelBuilder():
             num_words = len(ModelBuilder.word_index) + 1
 
             # Map each word to an embedding, initially all of which are zeros
-            ModelBuilder.embedding_matrix = np.zeros((num_words, EMBEDDING_DIM)) 
+            ModelBuilder.embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
             for word, idx in ModelBuilder.word_index.items():
                 if word in embeddings_index.vocab:
                     # Words not in the embedding index are all 0
@@ -70,6 +74,20 @@ class ModelBuilder():
 
 
     @staticmethod
+    def elmo() -> keras.models.Model:
+        inputs = Input(shape=(1, ), name='input', dtype=tf.string)
+        X = inputs
+
+        X = ElmoEmbeddingLayer()(X)
+        X = Dense(512, activation='relu')(X)
+        X = Dropout(0.3)(X)
+        X = Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmo')
+        return model
+
+
+    @staticmethod
     def simple_rnn() -> keras.models.Model:
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
@@ -81,21 +99,21 @@ class ModelBuilder():
             input_shape=(EMBEDDING_DIM, 1))(X) # [TODO]: do I need recurrent dropout?
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(2, activation='softmax')(X)
-        
+
         model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn')
         return model
 
 
     @staticmethod
     def ensemble_model(*models) -> keras.models.Model:
-        model_input = model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
         # Collect outputs of models
         outputs = [model(model_input) for model in models]
         # Average outputs
         avg_output = keras.layers.average(outputs)
         # Build model from same input and avg output
         model_ensamble = keras.models.Model(
-            inputs=model_input, 
-            outputs=avg_output, 
+            inputs=model_input,
+            outputs=avg_output,
             name='ensemble')
         return model_ensamble

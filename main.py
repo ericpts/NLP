@@ -4,10 +4,10 @@ import random
 import string
 import argparse
 import pandas as pd
-import tensorflow.keras as keras
+import keras
 
-from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.callbacks import Callback
+from keras.optimizers import SGD, Adam
+from keras.callbacks import Callback
 from sklearn.model_selection import train_test_split
 from typing import List
 from pathlib import Path
@@ -18,7 +18,6 @@ from models import *
 
 
 def get_callbacks(model_name: str) -> Callback:
-    os.system("mkdir -p checkpoints")
     checkpoint_id = ''.join(random.choice(string.ascii_letters + string.digits)
         for i in range(5))
 
@@ -56,6 +55,10 @@ def get_callbacks(model_name: str) -> Callback:
 
 
 def main(args: argparse.Namespace) -> None:
+    os.system("mkdir -p models")
+    os.system("mkdir -p checkpoints")
+    os.system("mkdir -p logs")
+
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model
@@ -77,7 +80,7 @@ def main(args: argparse.Namespace) -> None:
 
     if not args.eval:
         # Load and split data
-        X, y = load_data(train=True)
+        X, y = load_data(train=True, as_text=args.as_text)
         X_train, X_val, y_train, y_val = \
             train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
         assert X_train.shape[0] == y_train.shape[0]
@@ -105,7 +108,7 @@ def main(args: argparse.Namespace) -> None:
         print('Model loaded from disk.')
 
     # Predict using the test data
-    X_test, _ = load_data(train=False)
+    X_test, _ = load_data(train=False, as_text=args.as_text)
     y_pred = model.predict(X_test).argmax(axis=-1)
     y_pred = [-1 if pred == 0 else pred for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
@@ -137,6 +140,11 @@ if __name__ == '__main__':
         "--load",
         type=str,
         help="Specify some checkpoint to load. Specify the .hdf5 file without .data or .index afterwards")
+    parser.add_argument(
+        "--as-text",
+        action='store_true',
+        help="Use raw text for training."
+    )
     parser.add_argument(
         'model_name',
         type=str,

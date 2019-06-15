@@ -4,3 +4,4 @@ tensorflow
 pandas
 nltk
 pandas
+tensorflow_hub
