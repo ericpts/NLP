@@ -1,29 +1,70 @@
 #!/usr/bin/env python3
 import os
+import random
+import string
 import argparse
 import pandas as pd
-
-from pathlib import Path
 import tensorflow.keras as keras
+
 from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.callbacks import Callback
 from sklearn.model_selection import train_test_split
+from typing import List
+from pathlib import Path
 
 from constants import *
 from util import *
 from models import *
 
 
-def main() -> None:
-    global ARGS
-    model_path = os.path.join('models','{}.bin'.format(ARGS.model_name))
-    
+def get_callbacks(model_name: str) -> Callback:
+    os.system("mkdir -p checkpoints")
+    checkpoint_id = ''.join(random.choice(string.ascii_letters + string.digits)
+        for i in range(5))
+
+    checkpoint_name = "{}-{}-{}-{}.hdf5".format(
+        model_name,
+        checkpoint_id,
+        "{epoch:02d}",
+        "{val_acc:.2f}",
+    )
+    checkpoint_path = os.path.join('checkpoints', checkpoint_name)
+
+    checkpoint = keras.callbacks.ModelCheckpoint(
+        checkpoint_path,
+        monitor='val_acc',
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+        mode='max',
+    )
+    earlystop = keras.callbacks.EarlyStopping(
+        monitor='val_loss',
+        mode='min',
+        verbose=1,
+        patience=2,
+    )
+
+    # Setup tensorboard
+    tensorboard = keras.callbacks.TensorBoard(
+        log_dir='./logs',
+        histogram_freq=1,
+        update_freq=10000,
+    )
+
+    return [checkpoint, earlystop, tensorboard]
+
+
+def main(args: argparse.Namespace) -> None:
+    model_path = os.path.join('models','{}.bin'.format(args.model_name))
+
     # Create model
     ModelBuilder.initialize()
-    model = ModelBuilder.create_model(ARGS.model_name, ARGS.pretrained_embeddings)
+    model = ModelBuilder.create_model(args.model_name, args.pretrained_embeddings)
 
-    if ARGS.load != None:
-        print("Loading model weights from: {}".format(ARGS.load))
-        model.load_weights(filepath=ARGS.load)
+    if args.load != None:
+        print("Loading model weights from: {}".format(args.load))
+        model.load_weights(filepath=args.load)
         print("Model loaded from disk!")
 
     # Prints summary of the model
@@ -31,51 +72,33 @@ def main() -> None:
     model.compile(
         loss='binary_crossentropy',
         metrics=['accuracy'],
-        optimizer=Adam(
-            lr=.001,
-            decay=.0, # no decay for now
-            ))
+        optimizer=Adam(lr=.001, decay=.0),
+    )
 
-    if not ARGS.eval:
+    if not args.eval:
         # Load and split data
         X, y = load_data(train=True)
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
+        X_train, X_val, y_train, y_val = \
+            train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
         assert X_train.shape[0] == y_train.shape[0]
         assert X_val.shape[0] == y_val.shape[0]
-        print('Train data: {}, Validation data: {}'.format(X_train.shape[0], X_val.shape[0]))
-
-        # Setup callbacks
-        # Checkpoint
-        filepath= str(ARGS.model_name) + "-{epoch:02d}-{val_acc:.2f}.hdf5"
-        checkpoint = keras.callbacks.ModelCheckpoint(
-                        os.path.join('.', filepath),
-                        monitor='val_acc',
-                        verbose=1,
-                        save_best_only=True,
-                        save_weights_only=True,
-                        mode='max')
-        earlystop = keras.callbacks.EarlyStopping(
-                        monitor='val_loss',
-                        mode='min',
-                        verbose=1,
-                        patience=2)
-        tensorboard = keras.callbacks.TensorBoard(
-                        log_dir='./logs',
-                        histogram_freq=1)
-        callbacks_list = [checkpoint, tensorboard]
+        print('Train data: {}, Validation data: {}'.format(
+            X_train.shape[0],
+            X_val.shape[0],
+        ))
 
         model.fit(
             X_train,
             y_train,
             validation_data=(X_val, y_val),
-            epochs=ARGS.epochs,
-            batch_size=ARGS.batch_size,
-            callbacks=callbacks_list)
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            callbacks=get_callbacks(args.model_name))
 
         os.system("mkdir -p models")
         model.save(model_path)
         print("Model {} saved!".format(model_path))
-    elif ARGS.load is None:
+    elif args.load is None:
         print("Loading previously trained .bin model from models/")
         print("You can specify a checkpoint to load from with --load")
         model = keras.models.load_model(model_path)
@@ -83,9 +106,7 @@ def main() -> None:
 
     # Predict using the test data
     X_test, _ = load_data(train=False)
-
     y_pred = model.predict(X_test).argmax(axis=-1)
-    # Negative class is denoted by -1
     y_pred = [-1 if pred == 0 else pred for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
@@ -93,7 +114,6 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    global ARGS
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--eval",
@@ -123,5 +143,4 @@ if __name__ == '__main__':
         help="Model name (e.g. cnnlstm)"
     )
 
-    ARGS = parser.parse_args()
-    main()
+    main(parser.parse_args())
