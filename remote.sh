@@ -9,14 +9,14 @@ HOURS=5
 mkdir -p remote
 
 function usage() {
-    echo "Usage: $0 [OPTION]..."
+	echo "Usage: $0 [OPTION]..."
 	echo "Communicating with clusters."
 
-    echo -e "\nOptions: "
+	echo -e "\nOptions: "
 	printf "\t %- 30s %s\n" "-u | --user" "Specify user name(e.g. aledan)"
-    printf "\t %- 30s %s\n" "-c | --cluster" "Specify cluster name(e.g. euler)"
-    printf "\t %- 30s %s\n" "-p | --push" "Pushes code to cluster."
-    printf "\t %- 30s %s\n" "-d | --pull" "Pull data from cluster."
+	printf "\t %- 30s %s\n" "-c | --cluster" "Specify cluster name(e.g. euler)"
+	printf "\t %- 30s %s\n" "-p | --push" "Pushes code to cluster."
+	printf "\t %- 30s %s\n" "-d | --pull" "Pull data from cluster."
 	printf "\t %- 30s %s\n" "-bsub"
 	printf "\t %- 30s %s\n" "-bbjobs"
 	printf "\t %- 30s %s\n" "-bkill"
@@ -49,6 +49,7 @@ function push_source() {
 		git stash
 		git checkout $BRANCH
 		git pull
+		rm datasets/*.npz
 		exit
 	ENDSSH
 	# copy local modifications

@@ -109,8 +109,8 @@ def main(args: argparse.Namespace) -> None:
 
     # Predict using the test data
     X_test, _ = load_data(train=False, as_text=text_input)
-    y_pred = model.predict(X_test).argmax(axis=-1)
-    y_pred = [-1 if pred == 0 else pred for pred in y_pred]
+    y_pred = model.predict(X_test)
+    y_pred = [1 if pred > 0.5 else 0 for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
     df.to_csv(PREDICTION_FILE)

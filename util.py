@@ -82,7 +82,6 @@ def prepare_data(train: bool, as_text: bool) -> None:
         X = Path(TEST_DATA_FILE).read_text().split('\n')[:-1]
         X = [part.split(',')[1] for part in X]
         X = [normalize_sentence(t) for t in X]
-        print(X)
 
     # Saving processed text
     if as_text:

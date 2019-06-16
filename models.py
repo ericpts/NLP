@@ -38,10 +38,26 @@ class Models:
         model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn')
         return model
 
+    @staticmethod
+    def cnn1layer() -> keras.models.Model:
+        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        X = DefaultEmbedding.layer()(X)
+        X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
+        X = keras.layers.MaxPooling1D(pool_size=2)(X)
+        X = keras.layers.Dropout(1 / 2)(X)
+        X = keras.layers.Flatten()(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
+        return model
 
 class ModelBuilder:
     models = {
         'simple-rnn' : Models.simple_rnn,
+        'cnn1layer' : Models.cnn1layer,
         'elmo' : Models.elmo,
     }
 
