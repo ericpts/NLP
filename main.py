@@ -59,6 +59,7 @@ def main(args: argparse.Namespace) -> None:
     os.system("mkdir -p checkpoints")
     os.system("mkdir -p logs")
 
+    text_input = args.model_name in ['elmo']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model
@@ -79,9 +80,10 @@ def main(args: argparse.Namespace) -> None:
 
     if not args.eval:
         # Load and split data
-        X, y = load_data(train=True, as_text=args.text_input)
+        X, y = load_data(train=True, as_text=text_input)
         X_train, X_val, y_train, y_val = \
             train_test_split(X, y, test_size=TRAIN_TEST_SPLIT_PERCENTAGE)
+
         assert X_train.shape[0] == y_train.shape[0]
         assert X_val.shape[0] == y_val.shape[0]
         print('Train data: {}, Validation data: {}'.format(
@@ -97,7 +99,6 @@ def main(args: argparse.Namespace) -> None:
             batch_size=args.batch_size,
             callbacks=get_callbacks(args.model_name))
 
-        os.system("mkdir -p models")
         model.save(model_path)
         print("Model {} saved!".format(model_path))
     elif args.load is None:
@@ -107,7 +108,7 @@ def main(args: argparse.Namespace) -> None:
         print('Model loaded from disk.')
 
     # Predict using the test data
-    X_test, _ = load_data(train=False, as_text=args.text_input)
+    X_test, _ = load_data(train=False, as_text=text_input)
     y_pred = model.predict(X_test).argmax(axis=-1)
     y_pred = [-1 if pred == 0 else pred for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
@@ -135,11 +136,6 @@ if __name__ == '__main__':
         "--load",
         type=str,
         help="Specify some checkpoint to load. Specify the .hdf5 file without .data or .index afterwards")
-    parser.add_argument(
-        "--text-input",
-        action='store_true',
-        help="Use raw text for training."
-    )
     parser.add_argument(
         'model_name',
         type=str,

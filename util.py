@@ -5,15 +5,9 @@ import pickle
 import numpy as np
 import tensorflow.keras as keras
 
-
 from typing import Tuple, Optional
 from pathlib import Path
-
 from constants import *
-
-
-# Global tokenizer
-tokenizer = "not specified"
 
 
 def save_object(obj : object, name : str) -> None:
@@ -23,7 +17,7 @@ def save_object(obj : object, name : str) -> None:
         obj            Object to be saved
         name           Name to be given to the file
     '''
-    with open(name + '.pkl', 'wb') as f:
+    with open(name, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
@@ -33,7 +27,7 @@ def load_object(name : str) -> object:
         Args:
         name           Name of object to be loaded
     '''
-    with open(name + '.pkl', 'rb') as f:
+    with open(name, 'rb') as f:
         return pickle.load(f)
 
 
@@ -48,11 +42,7 @@ def load_data(
         False if the data should be returned as a list of integers, where each
             integer uniquely identifies a token.
     '''
-
-    if as_text:
-        path = Path(DATA_TEXT[train])
-    else:
-        path = Path(DATA_BINARIES[train])
+    path = Path(DATA_TEXT[train]) if as_text else Path(DATA_BINARIES[train])
 
     # If the data was already prepared by another run
     if not path.exists():
@@ -66,9 +56,12 @@ def load_data(
 
 
 def prepare_data(train: bool, as_text: bool) -> None:
-    global tokenizer
-    if train:
-        X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
+    tokenizer = None
+    if Path(TOKENIZER_PATH).is_file():
+        tokenizer = load_object(TOKENIZER_PATH)
+
+    if not Path(TOKENIZER_PATH).is_file() or train:
+        X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
         X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
 
         # Remove duplicate tweets!
@@ -81,34 +74,33 @@ def prepare_data(train: bool, as_text: bool) -> None:
         # Allow a maximum of different words
         tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
         tokenizer.fit_on_texts(X)
-    else:
-        X = Path(TEST_DATA_FILE).read_text().split('\n')[:-1] # Remove the index
+
+        # Save tokenizer
+        save_object(tokenizer, TOKENIZER_PATH)
+
+    if not train:
+        X = Path(TEST_DATA_FILE).read_text().split('\n')[:-1]
         X = [part.split(',')[1] for part in X]
         X = [normalize_sentence(t) for t in X]
-        # Bad way of doing it, TODO: save and restore the tokenizer
-        if tokenizer == "not specified":
-            X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
-            X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
-            X_train = X_pos + X_neg
-            X_train = [normalize_sentence(t) for t in X_train]
-            tokenizer = keras.preprocessing.text.Tokenizer(num_words=MAX_WORDS)
-            tokenizer.fit_on_texts(X_train)
+        print(X)
 
+    # Saving processed text
     if as_text:
         if train:
-            np.savez(TRAIN_DATA_TEXT, X=X, y=y)
+            np.savez(DATA_TEXT[train], X=X, y=y)
         else:
-            np.savez(TEST_DATA_TEXT, X=X)
+            np.savez(DATA_TEXT[train], X=X)
         return
 
+    # At this point, the text is normalized and the tokenizer is loaded
     X = tokenizer.texts_to_sequences(X)
-    word_index = tokenizer.word_index
-    save_object(word_index, 'word_index')
 
     # Pad all sentences to a fixed sequence length
     X = keras.preprocessing.sequence.pad_sequences(
-            X,
-            maxlen=MAX_SEQUENCE_LENGTH)
+        sequences=X,
+        maxlen=MAX_SEQUENCE_LENGTH,
+        padding='post',
+    )
     if train:
         np.savez(DATA_BINARIES[train], X=X, y=y)
     else:
@@ -167,7 +159,6 @@ def normalize_sentence(text : str) -> str:
 
     # Reform Emoijis of the form (<char>) e.g. (y)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
-
     text = handle_emojis(text)
 
     # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=

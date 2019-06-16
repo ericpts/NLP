@@ -34,8 +34,7 @@ class Word2Vec(Embedding):
 
     @staticmethod
     def layer() -> Layer:
-        with open('word_index.pkl', 'rb') as f:
-            word_index = pickle.load(f)
+        word_index = load_object(TOKENIZER_PATH).word_index
 
         w2vmodel = gensim.models.Word2Vec.load("models/word2vecTrainTest.model")
         embeddings_index = w2vmodel.wv
@@ -147,8 +146,8 @@ class DefaultEmbedding(Embedding):
     @staticmethod
     def layer() -> Layer:
         return layers.Embedding(
-            MAX_WORDS,
-            EMBEDDING_DIM,
+            input_dim=MAX_WORDS,
+            output_dim=EMBEDDING_DIM,
             input_length=MAX_SEQUENCE_LENGTH,
         )
 

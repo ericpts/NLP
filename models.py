@@ -33,7 +33,7 @@ class Models:
         X = keras.layers.LSTM(
             units=MAX_SEQUENCE_LENGTH)(X) # [TODO]: do I need recurrent dropout?
         X = keras.layers.Dropout(.25)(X)
-        X = keras.layers.Dense(2, activation='softmax')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn')
         return model

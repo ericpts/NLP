@@ -1,5 +1,6 @@
 import os
 
+TOKENIZER_PATH = os.path.join('datasets', 'tokenizer.pkl')
 TRAIN_DATA_BINARY = os.path.join('datasets', 'train-data.bin.npz')
 TEST_DATA_BINARY = os.path.join('datasets', 'test-data.bin.npz')
 POSITIVE_TRAIN_DATA_FILE = os.path.join('datasets', 'twitter-datasets', 'train_pos_full.txt')
@@ -27,7 +28,5 @@ TRAIN_TEST_SPLIT_PERCENTAGE = 0.1
 MAX_WORDS = 20000
 # Used for padding the smaller tweets
 MAX_SEQUENCE_LENGTH = 50
-# Arguments provided to the main function
-ARGS = None
 # Embedding dimension of words
 EMBEDDING_DIM = 100
