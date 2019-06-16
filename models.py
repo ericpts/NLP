@@ -30,8 +30,7 @@ class Models:
         X = inputs
         X = DefaultEmbedding.layer()(X)
         X = keras.layers.Dropout(.25)(X)
-        X = keras.layers.LSTM(
-            units=MAX_SEQUENCE_LENGTH)(X) # [TODO]: do I need recurrent dropout?
+        X = keras.layers.LSTM(units=MAX_SEQUENCE_LENGTH)(X)
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
@@ -40,13 +39,14 @@ class Models:
 
     @staticmethod
     def cnn1layer() -> keras.models.Model:
+        # acc(train/valid/test): 0.85/0.84/0.82 -- 5 epochs, commit 4536
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
         X = DefaultEmbedding.layer()(X)
         X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
         X = keras.layers.MaxPooling1D(pool_size=2)(X)
-        X = keras.layers.Dropout(1 / 2)(X)
+        X = keras.layers.Dropout(.5)(X)
         X = keras.layers.Flatten()(X)
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
@@ -64,7 +64,6 @@ class ModelBuilder:
     @staticmethod
     def create_model(name: str) -> keras.models.Model:
         return ModelBuilder.models[name]()
-
 
     @staticmethod
     def create_ensemble(names: List[str]) -> keras.models.Model:
