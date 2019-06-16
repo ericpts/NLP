@@ -29,10 +29,12 @@ function get_id() {
 		euler)
 			ID="$USER@euler.ethz.ch"
 			MEM="rusage[mem=1024]"
+			PYTHON_MODULE=python/3.6.0
 			;;
 		leon)
 			ID="$USER@login.leonhard.ethz.ch"
 			MEM="rusage[mem=1024, ngpus_excl_p=1]"
+			PYTHON_MODULE=python/3.6.1
 			;;
 		* )
 			echo "Wrong cluster name. Use either 'euler' or 'leon'."
@@ -73,8 +75,9 @@ function bsub() {
 	ssh -tt $ID <<- ENDSSH
 		cd NLP
 		module load hdf5
-		module load gcc/4.8.2 python/3.6.0
+		module load gcc/4.8.2 $PYTHON_MODULE
 		pip3 install --user -r requirements.txt
+        python3 -c "import nltk; nltk.download('wordnet')"
 
 		bsub -n $CORES -W $HOURS:00 -R "$MEM" $@
 
