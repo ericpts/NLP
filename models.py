@@ -8,7 +8,6 @@ from typing import List
 
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
 
-
 class Models:
     @staticmethod
     def elmo() -> keras.models.Model:
@@ -25,12 +24,12 @@ class Models:
 
     @staticmethod
     def simple_rnn() -> keras.models.Model:
+        # acc(train/valid/test): 0.85/0.84/0.82 | 3 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
-        X = DefaultEmbedding.layer()(X)
         X = keras.layers.Dropout(.25)(X)
-        X = keras.layers.LSTM(units=MAX_SEQUENCE_LENGTH)(X)
+        X = keras.layers.LSTM(units=50)(X)
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
@@ -39,7 +38,7 @@ class Models:
 
     @staticmethod
     def cnn1layer() -> keras.models.Model:
-        # acc(train/valid/test): 0.85/0.84/0.82 -- 5 epochs, commit 4536
+        # acc(train/valid/test): 0.85/0.84/0.82 | 5 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -54,11 +53,41 @@ class Models:
         model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
         return model
 
+    @staticmethod
+    def cnn_multiple_kernels() -> keras.models.Model:
+        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        X = DefaultEmbedding.layer()(X)
+
+        bigram_branch = keras.layers.Conv1D(filters=64,
+            kernel_size=2, padding='valid', activation='relu', strides=1)(X)
+        bigram_branch = keras.layers.GlobalMaxPooling1D()(bigram_branch)
+
+        trigram_branch = keras.layers.Conv1D(filters=64,
+            kernel_size=3, padding='valid', activation='relu', strides=1)(X)
+        trigram_branch = keras.layers.GlobalMaxPooling1D()(trigram_branch)
+
+        fourgram_branch = keras.layers.Conv1D(filters=64,
+            kernel_size=4, padding='valid', activation='relu', strides=1)(X)
+        fourgram_branch = keras.layers.GlobalMaxPooling1D()(fourgram_branch)
+
+        merged = keras.layers.concatenate(
+            [bigram_branch, trigram_branch, fourgram_branch], axis=1)
+
+        merged = keras.layers.Dropout(.5)(merged)
+        merged = keras.layers.Dense(128, activation='relu')(merged)
+        merged = keras.layers.Dense(1, activation='sigmoid')(merged)
+        model = keras.models.Model(inputs=inputs, outputs=merged, name='cnn-multiple-kernels')
+        return model
+
+
 class ModelBuilder:
     models = {
         'simple-rnn' : Models.simple_rnn,
         'cnn1layer' : Models.cnn1layer,
         'elmo' : Models.elmo,
+        'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
     }
 
     @staticmethod
