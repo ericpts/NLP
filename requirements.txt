@@ -6,3 +6,5 @@ nltk
 pandas
 tensorflow_hub
 keras>=2.1.0
+scikit-learn
+git+https://github.com/ericpts/keras-bert

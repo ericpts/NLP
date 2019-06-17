@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import tensorflow.keras as keras
 
+
 from typing import Tuple, Optional
 from pathlib import Path
 from constants import *
@@ -29,7 +30,6 @@ def load_object(name : str) -> object:
     '''
     with open(name, 'rb') as f:
         return pickle.load(f)
-
 
 def load_data(
     train : bool,
@@ -111,22 +111,25 @@ def handle_emojis(text : str) -> str:
     emoji_dictionary = {
         'happy': [':)', ':D', ';)', ':-)', ':P', '=)', '(:',
         ';-)', '=D', '=]', ';D', ':]', '^.^', '(y)'],
-        'sad': [':(', ';(', ':/', '=/', '=(', '(n)'],
-        'wow':  [':o'],
+        'sad': [':(', ';(', ':/', '=/', '=(', '(n)', 'D:'],
+        'surprise':  [':o'],
         'love': ['<3'],
         'kiss': [':*'],
         'annoyed': ['-_-', '-__-'],
-        'disappointed': ['.__.','._.', ':|'],
+        'disappointed': ['.__.', '._.', ':|', ':\\', ':/'],
         'laugh': ['XD'],
-        'thrill': [";')", ":')"]}
+        'thrill': [";')", ":')"]
+    }
+
     for meaning in emoji_dictionary.keys():
         for (i, emoji) in enumerate(emoji_dictionary[meaning]):
+            emoji = emoji.lower()
             spaced_emoji = ' '.join(list(emoji))
             text = text.replace(emoji, ' {} '.format(meaning))
             text = text.replace(spaced_emoji, ' {} '.format(meaning))
 
     # keep other emojis
-    other_emojis = ['D:',':-','*)', '>.<']
+    other_emojis = [':-','*)', '>.<']
     for (i, emoji) in enumerate(other_emojis):
         spaced_emoji = ' '.join(list(emoji))
         text = text.replace(emoji, ' <emoji{}> '.format(i))
@@ -136,7 +139,7 @@ def handle_emojis(text : str) -> str:
 
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
-def normalize_sentence(text : str) -> str:
+def normalize_sentence(text: str) -> str:
     # lower case the text
     text = text.lower()
 
@@ -146,8 +149,8 @@ def normalize_sentence(text : str) -> str:
     # Exclude: 4 you, 0 friends, < 3, me 2
     text = re.sub(r'\s[15-9]\s', ' ', text)
     # This needs to be done twice, find a better way
-    text = re.sub(r'\s[0-9][0-9]+\s', ' ', text)
-    text = re.sub(r'\s[0-9][0-9]+\s', ' ', text)
+    text = re.sub(r'\s[0-9][0-9]+\s', '<num>', text)
+    text = re.sub(r'\s[0-9][0-9]+\s', '<num>', text)
 
     # Remove weird non-printable characters
     text = ''.join([c for c in text if c in string.printable])
@@ -159,6 +162,9 @@ def normalize_sentence(text : str) -> str:
     # Reform Emoijis of the form (<char>) e.g. (y)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
     text = handle_emojis(text)
+
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
 
     # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=
     text = re.sub(r' \. ', r' ', text)
@@ -192,9 +198,6 @@ def normalize_sentence(text : str) -> str:
     for p in "><!?.()":
         for t in range(5):
             text = text.replace(p + ' ' + p, p * 2)
-
-    # Remove extra whitespace
-    text = re.sub(r'\s+', ' ', text)
     # Lematize, need to pass words individually
     text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
 
