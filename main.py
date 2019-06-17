@@ -110,10 +110,18 @@ def main(args: argparse.Namespace) -> None:
     # Predict using the test data
     X_test, _ = load_data(train=False, as_text=text_input)
     y_pred = model.predict(X_test)
+    y_pred_debug = y_pred
     y_pred = [1 if pred > 0.5 else -1 for pred in y_pred]
+
+    # Save predictions
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
     df.to_csv(PREDICTION_FILE)
+
+    # Save predictions debug file
+    df = pd.DataFrame(y_pred_debug, columns=['Prediction'], index=range(1, len(y_pred_debug) + 1))
+    df.index.name = 'Id'
+    df.to_csv(PREDICTION_DEBUG_FILE)
 
 
 if __name__ == '__main__':

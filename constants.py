@@ -21,6 +21,7 @@ DATA_TEXT = {
 }
 
 PREDICTION_FILE = 'test_prediction.csv'
+PREDICTION_DEBUG_FILE = 'test_prediction_debug.csv'
 
 TRAIN_TEST_SPLIT_PERCENTAGE = 0.1
 

@@ -11,6 +11,7 @@ logs/
 models/
 remote/
 test_prediction.csv
+test_prediction_debug.csv
 venv/
 word2vec.h5
 word_index.pkl
