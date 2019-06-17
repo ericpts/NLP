@@ -60,25 +60,28 @@ class Models:
         X = inputs
         X = DefaultEmbedding.layer()(X)
 
-        bigram_branch = keras.layers.Conv1D(filters=64,
+        # compute different local features; use 128 filters since it was underfitting
+        bigram_branch = keras.layers.Conv1D(filters=128,
             kernel_size=2, padding='valid', activation='relu', strides=1)(X)
         bigram_branch = keras.layers.GlobalMaxPooling1D()(bigram_branch)
 
-        trigram_branch = keras.layers.Conv1D(filters=64,
+        trigram_branch = keras.layers.Conv1D(filters=128,
             kernel_size=3, padding='valid', activation='relu', strides=1)(X)
         trigram_branch = keras.layers.GlobalMaxPooling1D()(trigram_branch)
 
-        fourgram_branch = keras.layers.Conv1D(filters=64,
+        fourgram_branch = keras.layers.Conv1D(filters=128,
             kernel_size=4, padding='valid', activation='relu', strides=1)(X)
         fourgram_branch = keras.layers.GlobalMaxPooling1D()(fourgram_branch)
 
         merged = keras.layers.concatenate(
             [bigram_branch, trigram_branch, fourgram_branch], axis=1)
 
-        merged = keras.layers.Dropout(.5)(merged)
-        merged = keras.layers.Dense(128, activation='relu')(merged)
-        merged = keras.layers.Dense(1, activation='sigmoid')(merged)
-        model = keras.models.Model(inputs=inputs, outputs=merged, name='cnn-multiple-kernels')
+        # avoid filter codependency
+        X = keras.layers.Dropout(.5)(merged)
+        # combine local features
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels')
         return model
 
 
