@@ -24,10 +24,11 @@ class Models:
 
     @staticmethod
     def simple_rnn() -> keras.models.Model:
-        # acc(train/valid/test): 0.85/0.84/0.82 | 3 epochs, commit 4536 | Adam lr 0.001
+        # acc(train/valid/test): 0.85/0.84/0.823 | 3 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
+        X = DefaultEmbedding.layer()(X)
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.LSTM(units=50)(X)
         X = keras.layers.Dropout(.25)(X)
@@ -38,7 +39,7 @@ class Models:
 
     @staticmethod
     def cnn1layer() -> keras.models.Model:
-        # acc(train/valid/test): 0.85/0.84/0.82 | 5 epochs, commit 4536 | Adam lr 0.001
+        # acc(train/valid/test): 0.85/0.84/0.823 | 5 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -55,6 +56,7 @@ class Models:
 
     @staticmethod
     def cnn_multiple_kernels() -> keras.models.Model:
+        # acc(train/valid/test): 0.84/0.84/0.829 | 2 epochs, commit a57e | Adam lr 0.001
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
