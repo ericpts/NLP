@@ -11,7 +11,9 @@ import util
 import constants
 
 BATCH_SIZE = 64
-EPOCHS = 1
+EPOCHS = 50
+STEPS_PER_EPOCH = 50
+
 
 def get_bert_model_dir() -> Path:
     model_dir = ".models/uncased_L-12_H-768_A-12"
@@ -89,14 +91,28 @@ def main():
     model.summary()
 
     X, y = get_bert_data(True)
+    # y = np.reshape(y, (y.shape[0], 1))
+
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=constants.TRAIN_TEST_SPLIT_PERCENTAGE)
 
+    D_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+    D_val = tf.data.Dataset.from_tensor_slices((X_val, y_val))
+
+    D_train = D_train.shuffle(y_train.shape[0])
+    D_train = D_train.batch(1, drop_remainder=True)
+    D_train = D_train.take(STEPS_PER_EPOCH)
+
+    # decay_steps = STEPS_PER_EPOCH * EPOCHS
+    # warmup_steps = decay_steps // 10
+
     decay_steps, warmup_steps = keras_bert.calc_train_steps(
-        y_train.shape[0],
+        STEPS_PER_EPOCH * BATCH_SIZE * EPOCHS,
         batch_size=BATCH_SIZE,
         epochs=EPOCHS,
     )
+
+    print(f'decay_steps = {decay_steps}, warmup_steps = {warmup_steps}', flush=True)
 
     model.compile(
         optimizer=keras_bert.AdamWarmup(
@@ -105,11 +121,11 @@ def main():
         metrics=['accuracy'],
     )
 
-    filepath = 'bert' + "-{epoch:02d}-{val_acc:.2f}.hdf5"
+    filepath = 'bert' + "-{epoch:02d}-{val_accuracy:.4f}.hdf5"
 
     checkpoint = keras.callbacks.ModelCheckpoint(
-        os.path.join('.', filepath),
-        monitor='val_acc',
+        os.path.join('models', filepath),
+        monitor='val_accuracy',
         verbose=1,
         save_best_only=True,
         save_weights_only=True,
@@ -128,12 +144,11 @@ def main():
     model_name = 'bert'
 
     model.fit(
-        X_train,
-        y_train,
-        validation_data=(X_val, y_val),
-        epochs=EPOCHS,
-        batch_size=BATCH_SIZE,
+        D_train,
+        validation_data=D_val,
+        epochs=10,
         callbacks=callbacks_list,
+        steps_per_epoch=20
     )
 
     model_path = os.path.join('models', f'{model_name}.bin')
