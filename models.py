@@ -108,7 +108,7 @@ class ModelBuilder:
         return ModelBuilder.ensemble_model(models)
 
     @staticmethod
-    def ensemble_model(*models: List[keras.models.Model]) -> keras.models.Model:
+    def ensemble_model(models: List[keras.models.Model]) -> keras.models.Model:
         model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
         # Collect outputs of models
         outputs = [model(model_input) for model in models]
