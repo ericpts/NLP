@@ -2,7 +2,7 @@ import keras
 import tensorflow as tf
 import pickle
 import numpy as np
-
+import random
 from constants import *
 from typing import List
 
@@ -19,7 +19,7 @@ class Models:
         X = keras.layers.Dropout(0.3)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='elmo')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmo' + str(random.random()))
         return model
 
     @staticmethod
@@ -34,7 +34,7 @@ class Models:
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn' + str(random.random()))
         return model
 
     @staticmethod
@@ -51,7 +51,7 @@ class Models:
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer' + str(random.random()))
         return model
 
     @staticmethod
@@ -83,7 +83,7 @@ class Models:
         # combine local features
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
-        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels' + str(random.random()))
         return model
 
 
