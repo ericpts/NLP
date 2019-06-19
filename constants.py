@@ -22,7 +22,7 @@ DATA_TEXT = {
 
 PREDICTION_FILE = 'test_prediction.csv'
 
-TRAIN_TEST_SPLIT_PERCENTAGE = 0.1
+TRAIN_TEST_SPLIT_PERCENTAGE = 0.2
 
 # Used for assigning numbers to most popular words and ignoring the rest
 MAX_WORDS = 20000
