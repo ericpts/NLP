@@ -63,7 +63,10 @@ def main(args: argparse.Namespace) -> None:
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model
-    model = ModelBuilder.create_model(args.model_name)
+    if args.ensemble < 2:
+        model = ModelBuilder.create_model(args.model_name)
+    else:
+        model = ModelBuilder.create_ensemble([args.model_name for i in range(args.ensemble)])
 
     if args.load != None:
         print("Loading model weights from: {}".format(args.load))
@@ -141,5 +144,10 @@ if __name__ == '__main__':
         type=str,
         help="Model name (e.g. cnnlstm)"
     )
-
+    parser.add_argument(
+        '--ensemble',
+        type=int,
+        default=1,
+        help="Ensemble size to use"
+    )
     main(parser.parse_args())
