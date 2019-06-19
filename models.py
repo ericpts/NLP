@@ -23,6 +23,22 @@ class Models:
         return model
 
     @staticmethod
+    def multilstm() -> keras.models.Model:
+        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        # X = ElmoEmbedding.layer()(X) # Need to feed in strings for this
+        X = DefaultEmbedding.layer()(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(2, activation='softmax')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='multilstm' + str(random.random()))
+        return model
+
+    @staticmethod
     def simple_rnn() -> keras.models.Model:
         # acc(train/valid/test): 0.85/0.84/0.823 | 3 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
@@ -93,6 +109,7 @@ class ModelBuilder:
         'cnn1layer' : Models.cnn1layer,
         'elmo' : Models.elmo,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
+        'multilstm': Models.multilstm
     }
 
     @staticmethod
