@@ -187,4 +187,3 @@ if __name__ == '__main__':
         sys.exit(0)
 
     parser.print_help()
-    gen_model()

@@ -23,8 +23,26 @@ class Models:
         return model
 
     @staticmethod
+    def birnn() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        X = DefaultEmbedding.layer()(X)
+        X = keras.layers.normalization.BatchNormalization()(X)
+        X = keras.layers.Bidirectional(keras.layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2, return_sequences=True))(X)
+        X = keras.layers.Bidirectional(keras.layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2))(X)
+        X = keras.layers.Dropout(.5)(X)
+        X = keras.layers.Dense(64, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='multilayer-rnn')
+        return model
+
+    @staticmethod
     def simple_rnn() -> keras.models.Model:
-        # acc(train/valid/test): 0.85/0.84/0.823 | 3 epochs, commit 4536 | Adam lr 0.001
+        # acc(train/valid/test): 0.85/0.84/0.850 | 3 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -39,7 +57,7 @@ class Models:
 
     @staticmethod
     def cnn1layer() -> keras.models.Model:
-        # acc(train/valid/test): 0.85/0.84/0.823 | 5 epochs, commit 4536 | Adam lr 0.001
+        # acc(train/valid/test): 0.85/0.84/0.853 | 5 epochs, commit 4536 | Adam lr 0.001
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -56,7 +74,7 @@ class Models:
 
     @staticmethod
     def cnn_multiple_kernels() -> keras.models.Model:
-        # acc(train/valid/test): 0.84/0.84/0.829 | 2 epochs, commit a57e | Adam lr 0.001
+        # acc(train/valid/test): 0.84/0.84/0.855 | 2 epochs, commit a57e | Adam lr 0.001
         inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -93,6 +111,7 @@ class ModelBuilder:
         'cnn1layer' : Models.cnn1layer,
         'elmo' : Models.elmo,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
+        'birnn' : Models.birnn,
     }
 
     @staticmethod
