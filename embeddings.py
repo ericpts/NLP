@@ -169,6 +169,16 @@ class ElmoEmbeddingLayer(Layer):
         else:
             return (input_shape[0], MAX_SEQUENCE_LENGTH, self.dimensions)
 
+    def get_config(self):
+        base_config = super(ElmoEmbeddingLayer, self).get_config()
+        base_config['mode'] = self.mode
+        base_config['trainable'] = self.trainable
+        return base_config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 
 class ElmoEmbedding(Embedding):
     @staticmethod

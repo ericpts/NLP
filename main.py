@@ -13,10 +13,20 @@ from typing import List
 from pathlib import Path
 from time import strftime, localtime
 
+from embeddings import ElmoEmbedding
 from constants import *
 from util import *
 from models import *
 
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = False  # to log device placement (on which device the operation ran)
+                                    # (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
+startTime = strftime('%d-%m-%Y_%H-%M-%S', localtime())
 
 def get_callbacks(model_name: str) -> Callback:
     checkpoint_id = ''.join(random.choice(string.ascii_letters + string.digits)
