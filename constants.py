@@ -30,3 +30,4 @@ MAX_WORDS = 20000
 MAX_SEQUENCE_LENGTH = 50
 # Embedding dimension of words
 EMBEDDING_DIM = 100
+C = {'ELMO_SEQ': False, 'BATCH_SIZE': 32}

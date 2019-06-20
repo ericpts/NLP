@@ -47,7 +47,7 @@ def get_callbacks(model_name: str) -> Callback:
     # Setup tensorboard
     tensorboard = keras.callbacks.TensorBoard(
         log_dir='./logs',
-        histogram_freq=1 if model_name not in ["elmo"] else 0,
+        histogram_freq=1 if model_name not in ["elmo", 'elmomultilstm2', 'elmomultilstm3'] else 0,
         update_freq=10000,
     )
 
@@ -59,7 +59,11 @@ def main(args: argparse.Namespace) -> None:
     os.system("mkdir -p checkpoints")
     os.system("mkdir -p logs")
 
-    text_input = args.model_name in ['elmo']
+    C['BATCH_SIZE'] = args.batch_size
+    if args.model_name in ['elmomultilstm2', 'elmomultilstm3']:
+        C['ELMO_SEQ'] = True
+
+    text_input = args.model_name in ['elmo', 'elmomultilstm2', 'elmomultilstm3']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model

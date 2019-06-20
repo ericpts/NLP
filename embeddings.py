@@ -98,9 +98,16 @@ class Word2Vec(Embedding):
         return sentences
 
 
+# mode 1: sentence -> (1024,)
+# mode 2: sentence 50 max -> (50, 1024)
+# mode 3: sentence 50 max -> (50, 1536)
 class ElmoEmbeddingLayer(Layer):
-    def __init__(self, trainable=True, **kwargs):
-        self.dimensions = 1024
+    def __init__(self, mode, trainable=True, **kwargs):
+        self.mode = mode
+        if self.mode == 3:
+            self.dimensions = 1024 + 512
+        else:
+            self.dimensions = 1024
         self.trainable = trainable
         super(ElmoEmbeddingLayer, self).__init__(**kwargs)
 
@@ -114,18 +121,52 @@ class ElmoEmbeddingLayer(Layer):
         super(ElmoEmbeddingLayer, self).build(input_shape)
 
     def call(self, x, mask=None):
-        result = self.elmo(
-            K.squeeze(K.cast(x, tf.string), axis=1),
-            as_dict=True,
-            signature='default',
-        )['default']
-        return result
+        if self.mode == 1:
+            result = self.elmo(
+                K.squeeze(K.cast(x, tf.string), axis=1),
+                as_dict=True,
+                signature='default',
+            )['default']
+            return result
+        elif self.mode == 2:
+            r1 = self.elmo(
+                inputs={
+                    'tokens': K.cast(x, tf.string),
+                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
+                    # 'sequence_len': [MAX_SEQUENCE_LENGTH for i in range(C['BATCH_SIZE'])]
+                },
+                as_dict=True,
+                signature='tokens',
+            )['elmo']
+            return r1
+        else:
+            r1 = self.elmo(
+                inputs={
+                    'tokens': K.cast(x, tf.string),
+                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
+                    # 'sequence_len': [MAX_SEQUENCE_LENGTH for i in range(C['BATCH_SIZE'])]
+                },
+                as_dict=True,
+                signature='tokens',
+            )['elmo']
+            r2 = self.elmo(
+                inputs={
+                    'tokens': K.cast(x, tf.string),
+                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
+                },
+                as_dict=True,
+                signature='tokens',
+            )['word_emb']
+            return tf.concat([r1, r2], 2)
 
     def compute_mask(self, inputs, mask=None):
         return K.not_equal(inputs, '--PAD--')
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.dimensions)
+        if self.mode == 1:
+            return (input_shape[0], self.dimensions)
+        else:
+            return (input_shape[0], MAX_SEQUENCE_LENGTH, self.dimensions)
 
 
 class ElmoEmbedding(Embedding):
@@ -134,8 +175,11 @@ class ElmoEmbedding(Embedding):
         return []
 
     @staticmethod
-    def layer(trainable = True) -> Layer:
-        return ElmoEmbeddingLayer(trainable=trainable)
+    # mode 1: sentence -> (1024,)
+    # mode 2: sentence 50 max -> (50, 1024)
+    # mode 3: sentence 50 max -> (50, 1536)
+    def layer(mode, trainable = True) -> Layer:
+        return ElmoEmbeddingLayer(mode, trainable=trainable)
 
 
 class DefaultEmbedding(Embedding):

@@ -14,7 +14,7 @@ class Models:
         inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
         X = inputs
 
-        X = ElmoEmbedding.layer()(X)
+        X = ElmoEmbedding.layer(mode=1)(X)
         X = keras.layers.Dense(512, activation='relu')(X)
         X = keras.layers.Dropout(0.3)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
