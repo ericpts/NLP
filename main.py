@@ -51,7 +51,6 @@ def get_callbacks(model_name: str) -> Callback:
     )
 
     # Setup tensorboard
-    startTime = strftime('%d-%m-%Y_%H-%M-%S', localtime())
     tensorboard = keras.callbacks.TensorBoard(
         log_dir='./logs' + '/' + model_name + startTime,
         histogram_freq=1 if model_name not in ["elmo", 'elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5'] else 0,
@@ -104,7 +103,19 @@ def main(args: argparse.Namespace) -> None:
             X_train.shape[0],
             X_val.shape[0],
         ))
-
+        N = args.batch_size
+        if len(X_train) % N != 0:
+            dummyData = N - len(X_train) % N
+            DUMMYX = X_train[0:dummyData]
+            DUMMYy = y_train[0:dummyData]
+            X_train = np.append(X_train, DUMMYX, axis=0)
+            y_train = np.append(y_train, DUMMYy, axis=0)
+        if len(X_val) % N != 0:
+            dummyData = N - len(X_val) % N
+            DUMMYX = X_val[0:dummyData]
+            DUMMYy = y_val[0:dummyData]
+            X_val = np.append(X_val, DUMMYX, axis=0)
+            y_val = np.append(y_val, DUMMYy, axis=0)
         model.fit(
             X_train,
             y_train,
@@ -118,16 +129,23 @@ def main(args: argparse.Namespace) -> None:
     elif args.load is None:
         print("Loading previously trained .bin model from models/")
         print("You can specify a checkpoint to load from with --load")
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects={'ElmoEmbeddingLayer': ElmoEmbedding.layer})
         print('Model loaded from disk.')
 
     # Predict using the test data
     X_test, _ = load_data(train=False, as_text=text_input)
-    y_pred = model.predict(X_test)
+    totTestData = len(X_test)
+    if len(X_test) % N != 0:
+        dummyData = N - len(X_test) % N
+        DUMMYX = X_test[0:dummyData]
+        X_test = np.append(X_test, DUMMYX, axis=0)
+    y_pred = model.predict(X_test, batch_size=N)
+    y_pred = y_pred[:totTestData]
     y_pred = [1 if pred > 0.5 else -1 for pred in y_pred]
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
-    df.to_csv(PREDICTION_FILE)
+    FINALFILE = args.model_name + startTime + PREDICTION_FILE
+    df.to_csv(FINALFILE)
 
 
 if __name__ == '__main__':
