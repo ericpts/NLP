@@ -62,13 +62,21 @@ def main(args: argparse.Namespace) -> None:
     text_input = args.model_name in ['elmo']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
-    # Create model
-    model = ModelBuilder.create_model(args.model_name)
+    model = None
+    if args.transfer != None:
+        # use model for transfer learning
+        model = ModelBuilder.create_model(args.transfer)
+    else:
+        # create model
+        model = ModelBuilder.create_model(args.model_name)
 
     if args.load != None:
         print("Loading model weights from: {}".format(args.load))
         model.load_weights(filepath=args.load)
         print("Model loaded from disk!")
+
+    if args.transfer != None:
+        model = ModelBuilder.create_model(args.model_name, [model])
 
     # Prints summary of the model
     model.summary()
@@ -144,6 +152,10 @@ if __name__ == '__main__':
         "--load",
         type=str,
         help="Specify some checkpoint to load. Specify the .hdf5 file without .data or .index afterwards")
+    parser.add_argument(
+        "--transfer",
+        type=str,
+        help="Use for the loaded model for transfer learning.")
     parser.add_argument(
         'model_name',
         type=str,

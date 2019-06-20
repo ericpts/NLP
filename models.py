@@ -8,7 +8,7 @@ from typing import List
 
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
 
-class Models:
+class BaseModels:
     @staticmethod
     def elmo() -> keras.models.Model:
         inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
@@ -24,7 +24,7 @@ class Models:
 
     @staticmethod
     def birnn() -> keras.models.Model:
-        # acc(train/valid/test): 0.86/0.855/0.862
+        # acc(train/valid/test): 0.86/0.855/0.862 | 5 epochs, commit b3ec | Adam lr 0.0001
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -106,18 +106,54 @@ class Models:
         return model
 
 
+class TransferModels:
+    @staticmethod
+    def transfer_layer1cnn(models: List[keras.models.Model] = None) -> keras.models.Model:
+        # acc(train/valid/test): 0.87/0.88/0.86 | 1 epoch, commit ad1e | Adam lr 0.001
+        # Pre: models[0] is birnn
+        birnn = BaseModels.birnn() if models is None else models[0]
+
+        for i in range(4):
+            birnn.layers.pop()
+
+        X = birnn.layers[-1].output
+        for layer in birnn.layers:
+            layer.trainable = False
+
+        X = keras.layers.Conv1D(64, 5, strides=1, padding='valid', activation='relu')(X)
+        X = keras.layers.MaxPooling1D(pool_size=2)(X)
+        X = keras.layers.Dropout(.5)(X)
+        X = keras.layers.Flatten()(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=birnn.inputs, outputs=X, name='transfer-layer1cnn')
+
+        return model
+
+
+class Models(BaseModels, TransferModels):
+    pass
+
+
 class ModelBuilder:
     models = {
+        'elmo' : Models.elmo,
+
         'simple-rnn' : Models.simple_rnn,
         'cnn1layer' : Models.cnn1layer,
-        'elmo' : Models.elmo,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
         'birnn' : Models.birnn,
+
+        'transfer-layer1cnn' : Models.transfer_layer1cnn,
     }
 
     @staticmethod
-    def create_model(name: str) -> keras.models.Model:
-        return ModelBuilder.models[name]()
+    def create_model(name: str, models: List[object] = None) -> keras.models.Model:
+        if models is None:
+            return ModelBuilder.models[name]()
+        else:
+            return ModelBuilder.models[name](models)
 
     @staticmethod
     def create_ensemble(names: List[str]) -> keras.models.Model:
