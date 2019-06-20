@@ -71,6 +71,7 @@ def main(args: argparse.Namespace) -> None:
     os.system("mkdir -p models")
     os.system("mkdir -p checkpoints")
     os.system("mkdir -p logs")
+    os.system("mkdir -p preds")
 
     C['BATCH_SIZE'] = args.batch_size
     if args.model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
@@ -100,7 +101,7 @@ def main(args: argparse.Namespace) -> None:
     model.compile(
         loss='binary_crossentropy',
         metrics=['accuracy'],
-        optimizer=Adam(lr=.001, decay=.0),
+        optimizer=Adam(lr=.0001, decay=.0),
     )
 
     if not args.eval:
@@ -140,7 +141,9 @@ def main(args: argparse.Namespace) -> None:
     # Save predictions
     df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
-    df.to_csv(PREDICTION_FILE)
+    pred_id = ''.join(random.choice(string.ascii_letters + string.digits)
+        for i in range(5))
+    df.to_csv("preds/{}-{}-{}".format(args.model_name, pred_id, PREDICTION_FILE))
 
     # Save predictions debug file
     df = pd.DataFrame(y_pred_debug, columns=['Prediction'], index=range(1, len(y_pred_debug) + 1))
@@ -171,7 +174,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--transfer",
         type=str,
-        help="Use for the loaded model for transfer learning.")
+        help="Use the loaded model for transfer learning.")
     parser.add_argument(
         'model_name',
         type=str,

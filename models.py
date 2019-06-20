@@ -122,7 +122,7 @@ class BaseModels:
         X = keras.layers.Dense(64, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='multilayer-rnn')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='birnn' + str(random.random()))
         return model
 
     @staticmethod
@@ -289,11 +289,9 @@ class Models(BaseModels, TransferModels, ElmoModels):
 class ModelBuilder:
     models = {
         'elmo' : Models.elmo,
-
         'simple-rnn' : Models.simple_rnn,
         'cnn1layer' : Models.cnn1layer,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
-
         'birnn' : Models.birnn,
 
         'transfer-layer1cnn' : Models.transfer_layer1cnn,

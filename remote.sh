@@ -5,6 +5,7 @@ CLUSTER="euler"
 USER="aledan"
 CORES=10
 HOURS=5
+CACHE="no"
 
 mkdir -p remote
 
@@ -17,12 +18,14 @@ function usage() {
 	printf "\t %- 30s %s\n" "-c | --cluster" "Specify cluster name(e.g. euler)"
 	printf "\t %- 30s %s\n" "-p | --push" "Pushes code to cluster."
 	printf "\t %- 30s %s\n" "-d | --pull" "Pull data from cluster."
-	printf "\t %- 30s %s\n" "-bsub"
 	printf "\t %- 30s %s\n" "-bbjobs"
-	printf "\t %- 30s %s\n" "-bkill"
-	printf "\t %- 30s %s\n" "-bpeek"
-	printf "\t %- 30s %s\n" "-cores"
-	printf "\t %- 30s %s\n" "-hours"
+	printf "\t %- 30s %s\n" "-cpu [command]" "Send cpu jobs."
+	printf "\t %- 30s %s\n" "-gpu [command]" "Send gpu jobs."
+	printf "\t %- 30s %s\n" "-bkill [job_id]"
+	printf "\t %- 30s %s\n" "-bpeek [job_id]"
+	printf "\t %- 30s %s\n" "-cores [num]"
+	printf "\t %- 30s %s\n" "-hours [num]"
+	printf "\t %- 30s %s\n" "-cache" "Use cached training and validation datasets."
 }
 
 function get_id() {
@@ -34,7 +37,7 @@ function get_id() {
 			;;
 		leon)
 			ID="$USER@login.leonhard.ethz.ch"
-			MEM="rusage[mem=1024, ngpus_excl_p=1]"
+			MEM="rusage[mem=1024]"
 			PYTHON_MODULE=python/3.6.1
 			;;
 		* )
@@ -52,7 +55,9 @@ function push_source() {
 		git stash
 		git checkout $BRANCH
 		git pull
-		rm datasets/*.npz
+		if [ "$CACHE" == "no" ]; then
+			rm datasets/*.npz
+		fi
 		exit
 	ENDSSH
 	# copy local modifications
@@ -71,7 +76,7 @@ function pull_data() {
 	rsync -h -v -r -P -t $ID:NLP/checkpoints remote/$CLUSTER
 }
 
-function bsub() {
+function cpu_send() {
 	get_id
 	ssh -tt $ID <<- ENDSSH
 		cd NLP
@@ -81,6 +86,22 @@ function bsub() {
         python3 -c "import nltk; nltk.download('wordnet')"
 
 		bsub -n $CORES -W $HOURS:00 -R "$MEM" $@
+
+		exit
+	ENDSSH
+}
+
+function gpu_send() {
+	ssh -tt $USER@login.leonhard.ethz.ch <<- ENDSSH
+		cd NLP
+		module load python_gpu/3.7.1 cuda/10.0.130
+		module load gcc/6.3.0
+		module load hdf5/1.10.1
+
+		pip3 install --user -r requirements.txt
+        python3 -c "import nltk; nltk.download('wordnet')"
+
+		bsub -W $HOURS:00 -n $CORES -R "rusage[mem=4000,scratch=5000,ngpus_excl_p=1]" -R "select[gpu_model0==GeForceGTX1080Ti]" "$@"
 
 		exit
 	ENDSSH
@@ -130,9 +151,17 @@ function parse_command_line_options() {
 				shift
 				HOURS=$1
 				;;
-			-bsub)
+			-cache)
+				CACHE="yes"
+				;;
+			-cpu)
 				shift
-				bsub "$@"
+				cpu_send "$@"
+				exit 0
+				;;
+			-gpu)
+				shift
+				gpu_send "$@"
 				exit 0
 				;;
 			-bbjobs)
