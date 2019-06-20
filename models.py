@@ -11,6 +11,7 @@ from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
 class BaseModels:
     @staticmethod
     def elmo() -> keras.models.Model:
+        # acc(train/valid/test): 0.86/0.85/0.85 | 10 epochs, commit e696 | Adam lr 0.0001
         inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
         X = inputs
 
@@ -109,6 +110,7 @@ class BaseModels:
 class TransferModels:
     @staticmethod
     def transfer_kernels(models: List[keras.models.Model] = None) -> keras.models.Model:
+        # acc(train/valid/test): 0.87/0.87/0.86 | 2 epochs, commit ad1e | Adam lr 0.001
         # Pre: models[0] is birnn
         birnn = BaseModels.birnn() if models is None else models[0]
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
@@ -148,8 +150,7 @@ class TransferModels:
 
     @staticmethod
     def transfer_layer1cnn(models: List[keras.models.Model] = None) -> keras.models.Model:
-        # acc(train/valid/test): 0.87/0.88/0.86 | 1 epoch, commit ad1e | Adam lr 0.001
-        # -- not useful, learns same thing as birnn
+        # acc(train/valid/test): 0.87/0.87/0.86 | 1 epoch, commit ad1e | Adam lr 0.001
         # Pre: models[0] is birnn
         birnn = BaseModels.birnn() if models is None else models[0]
 
@@ -173,6 +174,7 @@ class TransferModels:
 
     @staticmethod
     def transfer_deeprnn(models: List[keras.models.Model] = None) -> keras.models.Model:
+        # acc(train/valid/test): 0.87/0.88/0.862 | 2 epochs, commit ad1e | Adam lr 0.001
         # Pre: models[0] is birnn
         birnn = BaseModels.birnn() if models is None else models[0]
 
