@@ -7,6 +7,7 @@ from constants import *
 from typing import List
 
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
+from keras.layers import Dense, Dropout, Bidirectional, Input, LSTM, GlobalMaxPooling1D, GlobalMaxPooling2D
 
 class Models:
     @staticmethod
@@ -64,6 +65,36 @@ class Models:
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm3' + str(random.random()))
+        return model
+
+    def elmomultilstm4() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+
+        X = inputs
+        X = ElmoEmbedding.layer(mode=3)(X)
+        X = Bidirectional(keras.layers.LSTM(units=1024, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        X = Bidirectional(keras.layers.LSTM(units=1024))(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm4' + str(random.random()))
+        return model
+
+    def elmomultilstm5() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+
+        # Don't use pooling with masked input not implemented yet
+        # X = inputs
+        # X = ElmoEmbedding.layer(mode=3)(X)
+        # X = Bidirectional(LSTM(units=2048, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        # X = Bidirectional(LSTM(units=1024, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        # X = GlobalMaxPooling2D()(X)
+        # X = Dropout(0.25)(X)
+        # X = Dense(256, activation='relu')(X)
+        # X = Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm5' + str(random.random()))
         return model
 
     @staticmethod
@@ -139,7 +170,9 @@ class ModelBuilder:
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
         'multilstm': Models.multilstm,
         'elmomultilstm2': Models.elmomultilstm2,
-        'elmomultilstm3': Models.elmomultilstm3
+        'elmomultilstm3': Models.elmomultilstm3,
+        'elmomultilstm4': Models.elmomultilstm4,
+        'elmomultilstm5': Models.elmomultilstm5
     }
 
     @staticmethod
@@ -150,7 +183,7 @@ class ModelBuilder:
     def get_model_input(model_name):
         if model_name in ['elmo']:
             return keras.layers.Input(shape=(1, ), dtype=tf.string)
-        elif model_name in ['elmomultilstm2', 'elmomultilstm3']:
+        elif model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
             return keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
         else:
             return keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))

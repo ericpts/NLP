@@ -34,24 +34,19 @@ def get_callbacks(model_name: str) -> Callback:
         monitor='val_acc',
         verbose=1,
         save_best_only=True,
-        save_weights_only=True,
+        save_weights_only=False,
         mode='max',
-    )
-    earlystop = keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        mode='min',
-        verbose=1,
-        patience=2,
+        period=1
     )
 
     # Setup tensorboard
     tensorboard = keras.callbacks.TensorBoard(
         log_dir='./logs',
-        histogram_freq=1 if model_name not in ["elmo", 'elmomultilstm2', 'elmomultilstm3'] else 0,
+        histogram_freq=1 if model_name not in ["elmo", 'elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5'] else 0,
         update_freq=10000,
     )
 
-    return [checkpoint, earlystop, tensorboard]
+    return [checkpoint, tensorboard]
 
 
 def main(args: argparse.Namespace) -> None:
@@ -60,10 +55,10 @@ def main(args: argparse.Namespace) -> None:
     os.system("mkdir -p logs")
 
     C['BATCH_SIZE'] = args.batch_size
-    if args.model_name in ['elmomultilstm2', 'elmomultilstm3']:
+    if args.model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
         C['ELMO_SEQ'] = True
 
-    text_input = args.model_name in ['elmo', 'elmomultilstm2', 'elmomultilstm3']
+    text_input = args.model_name in ['elmo', 'elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     # Create model
