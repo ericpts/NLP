@@ -11,10 +11,23 @@ from keras.callbacks import Callback
 from sklearn.model_selection import train_test_split
 from typing import List
 from pathlib import Path
+from time import strftime, localtime
 
+from embeddings import ElmoEmbedding
 from constants import *
 from util import *
 from models import *
+
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = False  # to log device placement (on which device the operation ran)
+                                    # (nothing gets printed in Jupyter, only if you run it standalone)
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
+startTime = strftime('%d-%m-%Y_%H-%M-%S', localtime())
 
 
 def get_callbacks(model_name: str) -> Callback:
@@ -34,25 +47,24 @@ def get_callbacks(model_name: str) -> Callback:
         monitor='val_acc',
         verbose=1,
         save_best_only=True,
-        save_weights_only=True,
+        save_weights_only=False,
         mode='max',
-    )
-    earlystop = keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        mode='min',
-        verbose=1,
-        patience=2,
+        period=1
     )
 
     # Setup tensorboard
     tensorboard = keras.callbacks.TensorBoard(
-        log_dir='./logs',
-        histogram_freq=1 if model_name not in ["elmo"] else 0,
+        log_dir='./logs' + '/' + model_name + startTime,
+        histogram_freq=1 if model_name not in [
+            "elmo",
+            "elmomultilstm2",
+            "elmomultilstm3",
+            "elmomultilstm4",
+            "elmomultilstm5"] else 0,
         update_freq=10000,
     )
 
-    # return [checkpoint, earlystop, tensorboard]
-    return []
+    return [checkpoint, tensorboard]
 
 
 def main(args: argparse.Namespace) -> None:
@@ -60,16 +72,20 @@ def main(args: argparse.Namespace) -> None:
     os.system("mkdir -p checkpoints")
     os.system("mkdir -p logs")
 
-    text_input = args.model_name in ['elmo']
+    C['BATCH_SIZE'] = args.batch_size
+    if args.model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
+        C['ELMO_SEQ'] = True
+
+    text_input = args.model_name in ['elmo', 'elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
 
     model = None
     if args.transfer != None:
-        # use model for transfer learning
         model = ModelBuilder.create_model(args.transfer)
-    else:
-        # create model
+    elif args.ensemble < 2:
         model = ModelBuilder.create_model(args.model_name)
+    else:
+        model = ModelBuilder.create_ensemble([args.model_name for i in range(args.ensemble)])
 
     if args.load != None:
         print("Loading model weights from: {}".format(args.load))
@@ -99,7 +115,6 @@ def main(args: argparse.Namespace) -> None:
             X_train.shape[0],
             X_val.shape[0],
         ))
-
         model.fit(
             X_train,
             y_train,
@@ -113,7 +128,7 @@ def main(args: argparse.Namespace) -> None:
     elif args.load is None:
         print("Loading previously trained .bin model from models/")
         print("You can specify a checkpoint to load from with --load")
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects={'ElmoEmbeddingLayer': ElmoEmbedding.layer})
         print('Model loaded from disk.')
 
     # Predict using the test data
@@ -162,5 +177,10 @@ if __name__ == '__main__':
         type=str,
         help="Model name (e.g. cnnlstm)"
     )
-
+    parser.add_argument(
+        '--ensemble',
+        type=int,
+        default=1,
+        help="Ensemble size to use"
+    )
     main(parser.parse_args())

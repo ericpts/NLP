@@ -85,6 +85,12 @@ def prepare_data(train: bool, as_text: bool) -> None:
 
     # Saving processed text
     if as_text:
+        if C['ELMO_SEQ']:
+            def supplement(l):
+                l2 = ['' for i in range(MAX_SEQUENCE_LENGTH - len(l))]
+                return l + l2
+            X = [supplement(x.split()) for x in X]
+            print(len(X[0]))
         if train:
             np.savez(DATA_TEXT[train], X=X, y=y)
         else:

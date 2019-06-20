@@ -2,25 +2,108 @@ import keras
 import tensorflow as tf
 import pickle
 import numpy as np
-
+import random
 from constants import *
 from typing import List
 
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
+from keras.layers import Dense, Dropout, Bidirectional, Input, LSTM, GlobalMaxPooling1D, GlobalMaxPooling2D
 
-class BaseModels:
+
+ElmoEmbeddingLayerMode1 = ElmoEmbedding.layer(mode=1)
+ElmoEmbeddingLayerMode2 = ElmoEmbedding.layer(mode=2)
+ElmoEmbeddingLayerMode3 = ElmoEmbedding.layer(mode=3)
+
+
+class ElmoModels:
     @staticmethod
     def elmo() -> keras.models.Model:
-        # acc(train/valid/test): 0.86/0.85/0.85 | 10 epochs, commit e696 | Adam lr 0.0001
-        inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(1, ), dtype="string")
         X = inputs
 
-        X = ElmoEmbedding.layer()(X)
+        X = ElmoEmbeddingLayerMode1(X)
         X = keras.layers.Dense(512, activation='relu')(X)
         X = keras.layers.Dropout(0.3)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='elmo')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmo' + str(random.random()))
+        return model
+
+
+    @staticmethod
+    def elmomultilstm2() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+
+        X = inputs
+        X = ElmoEmbeddingLayerMode2(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm2' + str(random.random()))
+        return model
+
+    def elmomultilstm3() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+
+        X = inputs
+        X = ElmoEmbeddingLayerMode3(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm3' + str(random.random()))
+        return model
+
+    def elmomultilstm4() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+
+        X = inputs
+        X = ElmoEmbeddingLayerMode3(X)
+        X = Bidirectional(keras.layers.LSTM(units=1024, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        X = Bidirectional(keras.layers.LSTM(units=1024))(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm4' + str(random.random()))
+        return model
+
+    def elmomultilstm5() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+
+        # Don't use pooling with masked input not implemented yet
+        # X = inputs
+        # X = ElmoEmbedding.layer(mode=3)(X)
+        # X = Bidirectional(LSTM(units=2048, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        # X = Bidirectional(LSTM(units=1024, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
+        # X = GlobalMaxPooling2D()(X)
+        # X = Dropout(0.25)(X)
+        # X = Dense(256, activation='relu')(X)
+        # X = Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm5' + str(random.random()))
+        return model
+
+
+class BaseModels:
+    @staticmethod
+    def multilstm() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        X = DefaultEmbedding.layer()(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='multilstm' + str(random.random()))
         return model
 
     @staticmethod
@@ -54,7 +137,7 @@ class BaseModels:
         X = keras.layers.Dropout(.25)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='simple-rnn' + str(random.random()))
         return model
 
     @staticmethod
@@ -71,7 +154,7 @@ class BaseModels:
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
 
-        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn1layer' + str(random.random()))
         return model
 
     @staticmethod
@@ -103,7 +186,7 @@ class BaseModels:
         # combine local features
         X = keras.layers.Dense(128, activation='relu')(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
-        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels')
+        model = keras.models.Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels' + str(random.random()))
         return model
 
 
@@ -199,7 +282,7 @@ class TransferModels:
         return model
 
 
-class Models(BaseModels, TransferModels):
+class Models(BaseModels, TransferModels, ElmoModels):
     pass
 
 
@@ -210,11 +293,18 @@ class ModelBuilder:
         'simple-rnn' : Models.simple_rnn,
         'cnn1layer' : Models.cnn1layer,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
+
         'birnn' : Models.birnn,
 
         'transfer-layer1cnn' : Models.transfer_layer1cnn,
         'transfer-deeprnn' : Models.transfer_deeprnn,
         'transfer-kernels' : Models.transfer_kernels,
+
+        'multilstm': Models.multilstm,
+        'elmomultilstm2': Models.elmomultilstm2,
+        'elmomultilstm3': Models.elmomultilstm3,
+        'elmomultilstm4': Models.elmomultilstm4,
+        'elmomultilstm5': Models.elmomultilstm5
     }
 
     @staticmethod
@@ -225,23 +315,28 @@ class ModelBuilder:
             return ModelBuilder.models[name](models)
 
     @staticmethod
+    def get_model_input(model_name):
+        if model_name in ['elmo']:
+            return keras.layers.Input(shape=(1, ), dtype="string")
+        elif model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
+            return keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+        else:
+            return keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    @staticmethod
     def create_ensemble(names: List[str]) -> keras.models.Model:
         '''
         Expect names of models in the ensemble
         '''
-        models = [ModelBuilder.create_model(name) for name in names]
-        return ModelBuilder.ensemble_model(models)
-
-    @staticmethod
-    def ensemble_model(*models: List[keras.models.Model]) -> keras.models.Model:
-        model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        input = ModelBuilder.get_model_input(names[0])
+        models = [(name, ModelBuilder.create_model(name)) for name in names]
         # Collect outputs of models
-        outputs = [model(model_input) for model in models]
+        outputs = [model(input) for name, model in models]
         # Average outputs
         avg_output = keras.layers.average(outputs)
         # Build model from same input and avg output
-        model_ensamble = keras.models.Model(
-            inputs=model_input,
+        model_ensemble = keras.models.Model(
+            inputs=input,
             outputs=avg_output,
             name='ensemble')
-        return model_ensamble
+        return model_ensemble
