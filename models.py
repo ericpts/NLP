@@ -9,13 +9,18 @@ from typing import List
 from embeddings import ElmoEmbedding, Word2Vec, DefaultEmbedding
 from keras.layers import Dense, Dropout, Bidirectional, Input, LSTM, GlobalMaxPooling1D, GlobalMaxPooling2D
 
+
+ElmoEmbeddingLayerMode1 = ElmoEmbedding.layer(mode=1)
+ElmoEmbeddingLayerMode2 = ElmoEmbedding.layer(mode=2)
+ElmoEmbeddingLayerMode3 = ElmoEmbedding.layer(mode=3)
+
 class Models:
     @staticmethod
     def elmo() -> keras.models.Model:
         inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
         X = inputs
 
-        X = ElmoEmbedding.layer(mode=1)(X)
+        X = ElmoEmbeddingLayerMode1(X)
         X = keras.layers.Dense(512, activation='relu')(X)
         X = keras.layers.Dropout(0.3)(X)
         X = keras.layers.Dense(1, activation='sigmoid')(X)
@@ -43,7 +48,7 @@ class Models:
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
 
         X = inputs
-        X = ElmoEmbedding.layer(mode=2)(X)
+        X = ElmoEmbeddingLayerMode2(X)
         X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
         X = keras.layers.LSTM(units=1024)(X)
         X = keras.layers.Dropout(0.5)(X)
@@ -57,7 +62,7 @@ class Models:
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
 
         X = inputs
-        X = ElmoEmbedding.layer(mode=3)(X)
+        X = ElmoEmbeddingLayerMode3(X)
         X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
         X = keras.layers.LSTM(units=1024)(X)
         X = keras.layers.Dropout(0.5)(X)
@@ -71,7 +76,7 @@ class Models:
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
 
         X = inputs
-        X = ElmoEmbedding.layer(mode=3)(X)
+        X = ElmoEmbeddingLayerMode3(X)
         X = Bidirectional(keras.layers.LSTM(units=1024, return_sequences=True, dropout=0.25, recurrent_dropout=0.1))(X)
         X = Bidirectional(keras.layers.LSTM(units=1024))(X)
         X = keras.layers.Dropout(0.5)(X)
