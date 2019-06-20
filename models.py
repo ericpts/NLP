@@ -24,18 +24,46 @@ class Models:
 
     @staticmethod
     def multilstm() -> keras.models.Model:
-        inputs = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
-        # X = ElmoEmbedding.layer()(X) # Need to feed in strings for this
         X = DefaultEmbedding.layer()(X)
         X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
         X = keras.layers.LSTM(units=1024)(X)
         X = keras.layers.Dropout(0.5)(X)
         X = keras.layers.Dense(128, activation='relu')(X)
-        X = keras.layers.Dense(2, activation='softmax')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
 
         model = keras.models.Model(inputs=inputs, outputs=X, name='multilstm' + str(random.random()))
+        return model
+
+    @staticmethod
+    def elmomultilstm2() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+
+        X = inputs
+        X = ElmoEmbedding.layer(mode=2)(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm2' + str(random.random()))
+        return model
+
+    def elmomultilstm3() -> keras.models.Model:
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+
+        X = inputs
+        X = ElmoEmbedding.layer(mode=3)(X)
+        X = keras.layers.LSTM(units=2048, return_sequences=True)(X)
+        X = keras.layers.LSTM(units=1024)(X)
+        X = keras.layers.Dropout(0.5)(X)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='elmomultilstm3' + str(random.random()))
         return model
 
     @staticmethod
@@ -109,7 +137,9 @@ class ModelBuilder:
         'cnn1layer' : Models.cnn1layer,
         'elmo' : Models.elmo,
         'cnn-multiple-kernels' : Models.cnn_multiple_kernels,
-        'multilstm': Models.multilstm
+        'multilstm': Models.multilstm,
+        'elmomultilstm2': Models.elmomultilstm2,
+        'elmomultilstm3': Models.elmomultilstm3
     }
 
     @staticmethod
