@@ -17,7 +17,7 @@ ElmoEmbeddingLayerMode3 = ElmoEmbedding.layer(mode=3)
 class Models:
     @staticmethod
     def elmo() -> keras.models.Model:
-        inputs = keras.layers.Input(shape=(1, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(1, ), dtype="string")
         X = inputs
 
         X = ElmoEmbeddingLayerMode1(X)
@@ -45,7 +45,7 @@ class Models:
 
     @staticmethod
     def elmomultilstm2() -> keras.models.Model:
-        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
         X = inputs
         X = ElmoEmbeddingLayerMode2(X)
@@ -59,7 +59,7 @@ class Models:
         return model
 
     def elmomultilstm3() -> keras.models.Model:
-        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
         X = inputs
         X = ElmoEmbeddingLayerMode3(X)
@@ -73,7 +73,7 @@ class Models:
         return model
 
     def elmomultilstm4() -> keras.models.Model:
-        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
         X = inputs
         X = ElmoEmbeddingLayerMode3(X)
@@ -87,7 +87,7 @@ class Models:
         return model
 
     def elmomultilstm5() -> keras.models.Model:
-        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
         # Don't use pooling with masked input not implemented yet
         # X = inputs
@@ -187,9 +187,9 @@ class ModelBuilder:
     @staticmethod
     def get_model_input(model_name):
         if model_name in ['elmo']:
-            return keras.layers.Input(shape=(1, ), dtype=tf.string)
+            return keras.layers.Input(shape=(1, ), dtype="string")
         elif model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
-            return keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+            return keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
         else:
             return keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
