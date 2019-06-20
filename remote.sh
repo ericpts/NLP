@@ -20,6 +20,7 @@ function usage() {
 	printf "\t %- 30s %s\n" "-bsub"
 	printf "\t %- 30s %s\n" "-bbjobs"
 	printf "\t %- 30s %s\n" "-bkill"
+	printf "\t %- 30s %s\n" "-bpeek"
 	printf "\t %- 30s %s\n" "-cores"
 	printf "\t %- 30s %s\n" "-hours"
 }
@@ -93,6 +94,14 @@ function bbjobs() {
 	ENDSSH
 }
 
+function bpeek() {
+	get_id
+	ssh -tt $ID <<- ENDSSH
+		bpeek $1
+		exit
+	ENDSSH
+}
+
 function bkill() {
 	get_id
 	ssh -tt $ID <<- ENDSSH
@@ -128,12 +137,17 @@ function parse_command_line_options() {
 				;;
 			-bbjobs)
 				shift
-				bbjobs "$@"
+				bbjobs
 				exit 0
 				;;
 			-bkill)
 				shift
 				bkill $1
+				exit 0
+				;;
+			-bpeek)
+				shift
+				bpeek $1
 				exit 0
 				;;
 			-p | --push)

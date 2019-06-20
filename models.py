@@ -108,8 +108,48 @@ class BaseModels:
 
 class TransferModels:
     @staticmethod
+    def transfer_kernels(models: List[keras.models.Model] = None) -> keras.models.Model:
+        # Pre: models[0] is birnn
+        birnn = BaseModels.birnn() if models is None else models[0]
+        inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+        X = inputs
+        for layer in birnn.layers[:-4]:
+            X = layer(X)
+            layer.trainable = False
+
+        Y = keras.layers.Embedding(
+            input_dim=MAX_WORDS,
+            output_dim=256,
+            input_length=MAX_SEQUENCE_LENGTH,
+        )(inputs)
+        X = keras.layers.concatenate([X, Y], axis=1)
+
+        bigram_branch = keras.layers.Conv1D(filters=128,
+            kernel_size=2, padding='valid', activation='relu', strides=1)(X)
+        bigram_branch = keras.layers.GlobalMaxPooling1D()(bigram_branch)
+        trigram_branch = keras.layers.Conv1D(filters=128,
+            kernel_size=3, padding='valid', activation='relu', strides=1)(X)
+        trigram_branch = keras.layers.GlobalMaxPooling1D()(trigram_branch)
+        fourgram_branch = keras.layers.Conv1D(filters=128,
+            kernel_size=4, padding='valid', activation='relu', strides=1)(X)
+        fourgram_branch = keras.layers.GlobalMaxPooling1D()(fourgram_branch)
+
+        merged = keras.layers.concatenate(
+            [bigram_branch, trigram_branch, fourgram_branch], axis=1)
+
+        X = keras.layers.Dropout(.5)(merged)
+        X = keras.layers.Dense(128, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=inputs, outputs=X, name='transfer-kernels')
+
+        return model
+
+    @staticmethod
     def transfer_layer1cnn(models: List[keras.models.Model] = None) -> keras.models.Model:
         # acc(train/valid/test): 0.87/0.88/0.86 | 1 epoch, commit ad1e | Adam lr 0.001
+        # -- not useful, learns same thing as birnn
         # Pre: models[0] is birnn
         birnn = BaseModels.birnn() if models is None else models[0]
 
@@ -131,6 +171,31 @@ class TransferModels:
 
         return model
 
+    @staticmethod
+    def transfer_deeprnn(models: List[keras.models.Model] = None) -> keras.models.Model:
+        # Pre: models[0] is birnn
+        birnn = BaseModels.birnn() if models is None else models[0]
+
+        for i in range(4):
+            birnn.layers.pop()
+
+        X = birnn.layers[-1].output
+        for layer in birnn.layers:
+            layer.trainable = False
+
+        X = keras.layers.Dropout(.5)(X)
+        X = keras.layers.Bidirectional(keras.layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2, return_sequences=True))(X)
+        X = keras.layers.Bidirectional(keras.layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2))(X)
+        X = keras.layers.Dropout(.5)(X)
+        X = keras.layers.Dense(64, activation='relu')(X)
+        X = keras.layers.Dense(1, activation='sigmoid')(X)
+
+        model = keras.models.Model(inputs=birnn.inputs, outputs=X, name='transfer-deeprnn')
+
+        return model
+
 
 class Models(BaseModels, TransferModels):
     pass
@@ -146,6 +211,8 @@ class ModelBuilder:
         'birnn' : Models.birnn,
 
         'transfer-layer1cnn' : Models.transfer_layer1cnn,
+        'transfer-deeprnn' : Models.transfer_deeprnn,
+        'transfer-kernels' : Models.transfer_kernels,
     }
 
     @staticmethod

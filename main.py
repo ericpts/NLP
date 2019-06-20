@@ -51,7 +51,8 @@ def get_callbacks(model_name: str) -> Callback:
         update_freq=10000,
     )
 
-    return [checkpoint, earlystop, tensorboard]
+    # return [checkpoint, earlystop, tensorboard]
+    return []
 
 
 def main(args: argparse.Namespace) -> None:
