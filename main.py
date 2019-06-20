@@ -11,6 +11,7 @@ from keras.callbacks import Callback
 from sklearn.model_selection import train_test_split
 from typing import List
 from pathlib import Path
+from time import strftime, localtime
 
 from constants import *
 from util import *
@@ -40,8 +41,9 @@ def get_callbacks(model_name: str) -> Callback:
     )
 
     # Setup tensorboard
+    startTime = strftime('%d-%m-%Y_%H-%M-%S', localtime())
     tensorboard = keras.callbacks.TensorBoard(
-        log_dir='./logs',
+        log_dir='./logs' + '/' + model_name + startTime,
         histogram_freq=1 if model_name not in ["elmo", 'elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5'] else 0,
         update_freq=10000,
     )
