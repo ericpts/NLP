@@ -117,23 +117,28 @@ class ModelBuilder:
         return ModelBuilder.models[name]()
 
     @staticmethod
+    def get_model_input(model_name):
+        if model_name in ['elmo']:
+            return keras.layers.Input(shape=(1, ), dtype=tf.string)
+        elif model_name in ['elmomultilstm2', 'elmomultilstm3']:
+            return keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype=tf.string)
+        else:
+            return keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+
+    @staticmethod
     def create_ensemble(names: List[str]) -> keras.models.Model:
         '''
         Expect names of models in the ensemble
         '''
-        models = [ModelBuilder.create_model(name) for name in names]
-        return ModelBuilder.ensemble_model(models)
-
-    @staticmethod
-    def ensemble_model(models: List[keras.models.Model]) -> keras.models.Model:
-        model_input = keras.Input(shape=(MAX_SEQUENCE_LENGTH, ))
+        input = ModelBuilder.get_model_input(names[0])
+        models = [(name, ModelBuilder.create_model(name)) for name in names]
         # Collect outputs of models
-        outputs = [model(model_input) for model in models]
+        outputs = [model(input) for name, model in models]
         # Average outputs
         avg_output = keras.layers.average(outputs)
         # Build model from same input and avg output
-        model_ensamble = keras.models.Model(
-            inputs=model_input,
+        model_ensemble = keras.models.Model(
+            inputs=input,
             outputs=avg_output,
             name='ensemble')
-        return model_ensamble
+        return model_ensemble
