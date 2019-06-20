@@ -114,6 +114,7 @@ class ElmoEmbeddingLayer(Layer):
     def build(self, input_shape):
         self.elmo = hub.Module(
             'https://tfhub.dev/google/elmo/2',
+            # 'module/module_elmo2/',
             trainable=self.trainable,
             name="{}_module".format(self.name))
 
