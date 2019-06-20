@@ -24,6 +24,7 @@ class Models:
 
     @staticmethod
     def birnn() -> keras.models.Model:
+        # acc(train/valid/test): 0.86/0.855/0.862
         inputs = keras.layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs

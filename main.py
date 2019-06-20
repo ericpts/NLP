@@ -75,7 +75,7 @@ def main(args: argparse.Namespace) -> None:
     model.compile(
         loss='binary_crossentropy',
         metrics=['accuracy'],
-        optimizer=Adam(lr=.0001, decay=.0),
+        optimizer=Adam(lr=.001, decay=.0),
     )
 
     if not args.eval:
