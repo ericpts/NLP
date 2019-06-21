@@ -80,7 +80,7 @@ def prepare_data(train: bool, as_text: bool) -> None:
 
     if not train:
         X = Path(TEST_DATA_FILE).read_text().split('\n')[:-1]
-        X = [part.split(',')[1] for part in X]
+        X = [','.join(part.split(',')[1:]) for part in X]
         X = [normalize_sentence(t) for t in X]
 
     # Saving processed text
@@ -153,11 +153,11 @@ def normalize_sentence(text: str) -> str:
     text = re.sub(r'\s[0-9][0-9]+\s', '<num>', text)
 
     # Remove weird non-printable characters
-    text = ''.join([c for c in text if c in string.printable])
+    # text = ''.join([c for c in text if c in string.printable])
 
     # Specifics to the dataset
-    text = re.sub(r'\( . . . \)', r' ', text)
-    text = re.sub(r',', r'', text)
+    # text = re.sub(r'\( . . . \)', r' ', text)
+    # text = re.sub(r',', r'', text)
 
     # Reform Emoijis of the form (<char>) e.g. (y)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
@@ -167,20 +167,20 @@ def normalize_sentence(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
 
     # Remove ., _, *, {, }, ', ", |, \, :, ~,`,^,-,=
-    text = re.sub(r' \. ', r' ', text)
-    text = re.sub(r'\\', r'', text)
-    text = re.sub(r'\s_', r' ', text)
-    text = re.sub(r'\*', r'', text)
-    text = re.sub(r'\{', r'', text)
-    text = re.sub(r'\}', r'', text)
-    text = re.sub(r'\"', r'', text)
-    text = re.sub(r'\|', r'', text)
-    text = re.sub(r'\:', r'', text)
-    text = re.sub(r'\~', r'', text)
-    text = re.sub(r'\`', r'', text)
-    text = re.sub(r'\^', r'', text)
-    text = re.sub(r'\=', r'', text)
-    text = re.sub(r' \_', r' ', text)
+    # text = re.sub(r' \. ', r' ', text)
+    # text = re.sub(r'\\', r'', text)
+    # text = re.sub(r'\s_', r' ', text)
+    # text = re.sub(r'\*', r'', text)
+    # text = re.sub(r'\{', r'', text)
+    # text = re.sub(r'\}', r'', text)
+    # text = re.sub(r'\"', r'', text)
+    # text = re.sub(r'\|', r'', text)
+    # text = re.sub(r'\:', r'', text)
+    # text = re.sub(r'\~', r'', text)
+    # text = re.sub(r'\`', r'', text)
+    # text = re.sub(r'\^', r'', text)
+    # text = re.sub(r'\=', r'', text)
+    # text = re.sub(r' \_', r' ', text)
 
     # Watch to not remove tokens <user>, <url>
     text = re.sub(r' \> ', r' ', text)
@@ -190,15 +190,15 @@ def normalize_sentence(text: str) -> str:
     text = re.sub(r'r\si\sp', r'rip', text)
 
     # Remove single letters apart from x, i, u, y ,z
-    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
-    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
-    text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
+    # text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
+    # text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
+    # text = re.sub(r'\s[a-hj-tw]\s', r' ', text)
 
     # Concatenate consecutive punctuation groups
-    for p in "><!?.()":
-        for t in range(5):
-            text = text.replace(p + ' ' + p, p * 2)
+    # for p in "><!?.()":
+    #     for t in range(5):
+    #         text = text.replace(p + ' ' + p, p * 2)
     # Lematize, need to pass words individually
-    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
+    # text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
 
     return text

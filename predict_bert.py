@@ -133,8 +133,15 @@ def get_bert_data(train: bool):
 
 
 def predict():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', type=str, help='Where to load the weights from.')
+    args = parser.parse_args()
+
+    weights = Path(args.weights)
+    assert weights.exists()
+
     model = get_bert_model()
-    model.load_weights('bert-08-0.8366.hdf5')
+    model.load_weights(str(weights))
     print('Loaded model.')
     X_test, _ = get_bert_data(train=False)
 
@@ -145,67 +152,6 @@ def predict():
     df.to_csv('bert_out.csv')
 
 
-def main():
-    print(tf.__version__, flush=True)
-    model = get_bert_model()
-    model.summary()
-
-    X, y = get_bert_data(True)
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y, test_size=constants.TRAIN_TEST_SPLIT_PERCENTAGE)
-
-    D_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    D_train = D_train.shuffle(y_train.shape[0])
-    D_train = D_train.batch(BATCH_SIZE)
-    D_train = D_train.repeat()
-
-    D_val = tf.data.Dataset.from_tensor_slices((X_val, y_val))
-    D_val = D_val.batch(BATCH_SIZE)
-
-    total_steps = STEPS_PER_EPOCH * EPOCHS
-    warmup_steps = total_steps // 10
-    decay_steps = total_steps - warmup_steps
-
-    print(f'decay_steps = {decay_steps}, warmup_steps = {warmup_steps}', flush=True)
-
-    model.compile(
-        optimizer=keras_bert.AdamWarmup(
-            decay_steps=decay_steps,
-            warmup_steps=warmup_steps,
-            lr=2e-5,
-            min_lr=1e-7,
-            epsilon=1e-3,
-        ),
-        loss='binary_crossentropy',
-        metrics=['accuracy'],
-    )
-
-    filepath = Path('models') / str(int(time.time())) / "bert-{epoch:02d}-{val_accuracy:.4f}.hdf5"
-    filepath.parent.mkdir(exist_ok=True, parents=True)
-
-    checkpoint = keras.callbacks.ModelCheckpoint(
-        str(filepath),
-        monitor='val_accuracy',
-        verbose=1,
-        save_best_only=True,
-        save_weights_only=True,
-        mode='max',
-    )
-
-    callbacks_list = [
-        checkpoint,
-    ]
-
-    model.fit(
-        D_train,
-        validation_data=D_val,
-        epochs=EPOCHS,
-        callbacks=callbacks_list,
-        steps_per_epoch=STEPS_PER_EPOCH,
-    )
-
 
 if __name__ == '__main__':
-    # predict()
-    main()
+    predict()
