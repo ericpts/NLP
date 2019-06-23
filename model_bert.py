@@ -25,7 +25,7 @@ keras_bert.bert.gelu = gelu
 
 
 BATCH_SIZE = 64
-EPOCHS = 50
+EPOCHS = 100
 STEPS_PER_EPOCH = 2000
 
 
@@ -132,23 +132,21 @@ def get_bert_data(train: bool):
     return X, y
 
 
-def predict():
-    model = get_bert_model()
-    model.load_weights('bert-08-0.8366.hdf5')
-    print('Loaded model.')
-    X_test, _ = get_bert_data(train=False)
-
-    y_pred = model.predict(X_test)
-    y_pred = [1 if pred > 0.5 else -1 for pred in y_pred]
-    df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
-    df.index.name = 'Id'
-    df.to_csv('bert_out.csv')
-
-
 def main():
-    print(tf.__version__, flush=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', type=str, help='Where to load the weights from.')
+    parser.add_argument('--lr', type=str, default='2e-5', help='Learning rate.')
+
+    args = parser.parse_args()
+
     model = get_bert_model()
     model.summary()
+
+    if args.weights:
+        weights = Path(args.weights)
+        assert weights.exists()
+        model.load_weights(str(weights))
+        print(f'Loaded weights from {weights}.')
 
     X, y = get_bert_data(True)
 
@@ -169,11 +167,14 @@ def main():
 
     print(f'decay_steps = {decay_steps}, warmup_steps = {warmup_steps}', flush=True)
 
+    lr = float(args.lr)
+    print(f'Using a learning rate of {lr}')
+
     model.compile(
         optimizer=keras_bert.AdamWarmup(
             decay_steps=decay_steps,
             warmup_steps=warmup_steps,
-            lr=2e-5,
+            lr=lr,
             min_lr=1e-7,
             epsilon=1e-3,
         ),
@@ -188,9 +189,10 @@ def main():
         str(filepath),
         monitor='val_accuracy',
         verbose=1,
-        save_best_only=True,
+        # save_best_only=True,
         save_weights_only=True,
         mode='max',
+        period=2,
     )
 
     callbacks_list = [

@@ -14,3 +14,4 @@ test_prediction.csv
 venv/
 word2vec.h5
 word_index.pkl
+models/
