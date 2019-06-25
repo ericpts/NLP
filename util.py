@@ -2,7 +2,9 @@ import re
 import nltk
 import string
 import pickle
+import random
 import numpy as np
+
 
 from typing import Tuple, Optional
 from pathlib import Path
@@ -10,9 +12,9 @@ from constants import *
 
 
 def get_id() -> str:
-    """
+    '''
     Creates a unique 5-letter ID.
-    """
+    '''
     return ''.join(random.choice(string.ascii_letters + string.digits)
         for i in range(5))
 
@@ -34,10 +36,11 @@ def configures() -> None:
 
 def save_object(obj : object, name : str) -> None:
     '''
-        Saves 'obj' object in the OBJECT_DIRECTORY with the provided 'name'
-        Args:
-        obj            Object to be saved
-        name           Name to be given to the file
+    Saves 'obj' object in the OBJECT_DIRECTORY with the provided 'name'
+
+    Args:
+        obj:    Object to be saved
+        name:   Name to be given to the file
     '''
     with open(name, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -45,9 +48,10 @@ def save_object(obj : object, name : str) -> None:
 
 def load_object(name : str) -> object:
     '''
-        Loads object with the provided 'name' from the OBJECT_DIRECTORY
-        Args:
-        name           Name of object to be loaded
+    Loads object with the provided 'name' from the OBJECT_DIRECTORY
+
+    Args:
+        name:   Name of object to be loaded
     '''
     with open(name, 'rb') as f:
         return pickle.load(f)
@@ -58,11 +62,14 @@ def load_data(
     as_text: bool = False,
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     '''
-    train: Whether we want the training data.
-    as_text:
-        True if we should return the data as a list of strings.
-        False if the data should be returned as a list of integers, where each
-            integer uniquely identifies a token.
+    Loads data for training or evaluation.
+
+    Args:
+        train: Whether we want the training data.
+        as_text:
+            True  - if we should return the data as a list of strings.
+            False - if the data should be returned as a list of integers,
+                    where each integer uniquely identifies a token.
     '''
     path = Path(DATA_TEXT[train]) if as_text else Path(DATA_BINARIES[train])
 
@@ -107,12 +114,6 @@ def prepare_data(train: bool, as_text: bool) -> None:
 
     # Saving processed text
     if as_text:
-        if C['ELMO_SEQ']:
-            def supplement(l):
-                l2 = ['' for i in range(MAX_SEQUENCE_LENGTH - len(l))]
-                return l + l2
-            X = [supplement(x.split()) for x in X]
-            print(len(X[0]))
         if train:
             np.savez(DATA_TEXT[train], X=X, y=y)
         else:

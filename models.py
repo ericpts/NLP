@@ -5,11 +5,19 @@ import keras.layers as layers
 
 from typing import List
 from constants import *
+from util import get_id
 
 from keras.models import Model
 from embeddings import ElmoEmbedding
 from embeddings import Word2VecEmbedding
 from embeddings import DefaultEmbedding
+
+
+def _name_model(name: str) -> str:
+    '''
+    Given a base name, gives a unique name to a model.
+    '''
+    return "{}-{}".format(name, get_id())
 
 
 class ElmoModels:
@@ -18,47 +26,39 @@ class ElmoModels:
         inputs = layers.Input(shape=(1, ), dtype="string")
         X = inputs
 
-        X = ElmoEmbeddingLayerMode1(X)
+        X = ElmoEmbedding.layer()(X)
         X = layers.Dense(512, activation='relu')(X)
         X = layers.Dropout(0.3)(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        model = Model(inputs=inputs, outputs=X, name='elmo' + str(random.random()))
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('elmo'))
         return model
-
 
     @staticmethod
     def elmomultilstm() -> Model:
-        inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+        inputs = layers.Input(shape=(1, ), dtype="string")
 
         X = inputs
-        X = ElmoEmbeddingLayerMode(X)
+        X = ElmoEmbedding.layer()(X)
         X = layers.LSTM(units=2048, return_sequences=True)(X)
         X = layers.LSTM(units=1024)(X)
         X = layers.Dropout(0.5)(X)
         X = layers.Dense(128, activation='relu')(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        model = Model(inputs=inputs, outputs=X, name='elmomultilstm' + str(random.random()))
-        return model
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('elmomultilstm'))
 
 
 class BaseModels:
-    @staticmethod
-    def multilstm() -> Model:
-        inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
-
-        X = inputs
-        X = DefaultEmbedding.layer()(X)
-        X = layers.LSTM(units=2048, return_sequences=True)(X)
-        X = layers.LSTM(units=1024)(X)
-        X = layers.Dropout(0.5)(X)
-        X = layers.Dense(128, activation='relu')(X)
-        X = layers.Dense(1, activation='sigmoid')(X)
-
-        model = Model(inputs=inputs, outputs=X, name='multilstm' + str(random.random()))
-        return model
-
+    '''
+    Models that use
+    '''
     @staticmethod
     def birnn() -> Model:
         # acc(train/valid/test): 0.86/0.855/0.862 | 5 epochs, commit b3ec | Adam lr 0.0001
@@ -68,16 +68,18 @@ class BaseModels:
         X = inputs
         X = DefaultEmbedding.layer()(X)
         X = layers.normalization.BatchNormalization()(X)
-        X = layers.Bidirectional layers.GRU(
+        X = layers.Bidirectional(layers.GRU(
             units=256, dropout=.2, recurrent_dropout=.2, return_sequences=True))(X)
-        X = layers.Bidirectional layers.GRU(
+        X = layers.Bidirectional(layers.GRU(
             units=256, dropout=.2, recurrent_dropout=.2))(X)
         X = layers.Dropout(.5)(X)
         X = layers.Dense(128, activation='relu')(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        model = Model(inputs=inputs, outputs=X, name='birnn' + str(random.random()))
-        return model
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('birnn'))
 
     @staticmethod
     def simple_rnn() -> Model:
@@ -91,8 +93,10 @@ class BaseModels:
         X = layers.Dropout(.25)(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        model = Model(inputs=inputs, outputs=X, name='simple-rnn' + str(random.random()))
-        return model
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('simple-rnn'))
 
     @staticmethod
     def cnn1layer() -> Model:
@@ -108,8 +112,10 @@ class BaseModels:
         X = layers.Dense(128, activation='relu')(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        model = Model(inputs=inputs, outputs=X, name='cnn1layer' + str(random.random()))
-        return model
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('cnn1layer'))
 
     @staticmethod
     def cnn_multiple_kernels() -> Model:
@@ -140,11 +146,18 @@ class BaseModels:
         # combine local features
         X = layers.Dense(128, activation='relu')(X)
         X = layers.Dense(1, activation='sigmoid')(X)
-        model = Model(inputs=inputs, outputs=X, name='cnn-multiple-kernels' + str(random.random()))
-        return model
+
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('cnn-multiple-kernels'))
 
 
 class TransferModels:
+    '''
+    Models that use trasnfer learning from previously trained models.
+    '''
+
     @staticmethod
     def transfer_kernels(models: List[Model] = None) -> Model:
         # acc(train/valid/test): 0.87/0.87/0.86 | 2 epochs, commit ad1e | Adam lr 0.001
@@ -181,7 +194,10 @@ class TransferModels:
         X = layers.Dense(128, activation='relu')(X)
         X = layers.Dense(1, activation='sigmoid')(X)
 
-        return Model(inputs=inputs, outputs=X, name='transfer-kernels')
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('transfer-kernels'))
 
     @staticmethod
     def transfer_deeprnn(models: List[Model] = None) -> Model:
@@ -197,9 +213,9 @@ class TransferModels:
             layer.trainable = False
 
         X = layers.Dropout(.5)(X)
-        X = layers.Bidirectional layers.GRU(
+        X = layers.Bidirectional(layers.GRU(
             units=128, dropout=.2, recurrent_dropout=.2, return_sequences=True))(X)
-        X = layers.Bidirectional layers.GRU(
+        X = layers.Bidirectional(layers.GRU(
             units=128, dropout=.2, recurrent_dropout=.2))(X)
         X = layers.Dropout(.5)(X)
         X = layers.Dense(64, activation='relu')(X)
@@ -208,24 +224,28 @@ class TransferModels:
         return Model(
             inputs=birnn.inputs,
             outputs=X,
-            name='transfer-deeprnn')
+            name=_name_model('transfer-deeprnn'))
+
 
 class Models(BaseModels, TransferModels, ElmoModels):
     pass
 
 
 class ModelBuilder:
+    '''
+    Class used to create models and ensembles.
+    '''
+
     models = {
         'simple-rnn': Models.simple_rnn,
         'cnn1layer': Models.cnn1layer,
         'cnn-multiple-kernels': Models.cnn_multiple_kernels,
         'birnn': Models.birnn,
-        'multilstm': Models.multilstm,
 
         'transfer-deeprnn': Models.transfer_deeprnn,
         'transfer-kernels': Models.transfer_kernels,
 
-        'elmo': Models.multilstm,
+        'elmo': Models.elmo,
         'elmomultilstm': Models.elmomultilstm,
     }
 
