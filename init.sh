@@ -24,6 +24,7 @@ function download_dataset() {
 function download_dependecies() {
 	echo "Downlading dependecies..."
 	pip3 install -r requirements.txt
+	python3 -c "import nltk; nltk.download('wordnet')"
 	echo "Dependecies downloaded."
 }
 

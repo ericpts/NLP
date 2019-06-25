@@ -167,6 +167,8 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == '__main__':
+    init()
+
     embeddings = {
         "word2vec" : Word2VecEmbedding,
     }

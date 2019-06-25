@@ -19,7 +19,7 @@ def get_id() -> str:
         for i in range(5))
 
 
-def configures() -> None:
+def init() -> None:
     '''
     Configures tensorflow and creates directories. This should be run at the
     beginning of a script.
@@ -85,6 +85,17 @@ def load_data(
 
 
 def prepare_data(train: bool, as_text: bool) -> None:
+    '''
+    Prepares data for training or evaluation. The file will be cached
+    afterwards.
+
+    Args:
+        train: Whether we want the training data.
+        as_text:
+            True  - if we should return the data as a list of strings.
+            False - if the data should be returned as a list of integers,
+                    where each integer uniquely identifies a token.
+    '''
     tokenizer = None
     if Path(TOKENIZER_PATH).is_file():
         tokenizer = load_object(TOKENIZER_PATH)
@@ -135,11 +146,17 @@ def prepare_data(train: bool, as_text: bool) -> None:
         np.savez(DATA_BINARIES[train], X=X)
 
 
-def handle_emojis(text : str) -> str:
+def _handle_emojis(text : str) -> str:
+    '''
+    Replaces emojis in a sentence with a word associated to a feeling.
+
+    Args:
+        text:   Text to replace emojis in.
+    '''
     # Translate common emojis to words to help the model
     emoji_dictionary = {
         'happy': [':)', ':D', ';)', ':-)', ':P', '=)', '(:',
-        ';-)', '=D', '=]', ';D', ':]', '^.^', '(y)'],
+                  ';-)', '=D', '=]', ';D', ':]', '^.^', '(y)'],
         'sad': [':(', ';(', ':/', '=/', '=(', '(n)', 'D:'],
         'surprise':  [':o'],
         'love': ['<3'],
@@ -157,7 +174,7 @@ def handle_emojis(text : str) -> str:
             text = text.replace(emoji, ' {} '.format(meaning))
             text = text.replace(spaced_emoji, ' {} '.format(meaning))
 
-    # keep other emojis
+    # keep other emojis, these will be eliminated by the tokenizer
     other_emojis = [':-','*)', '>.<']
     for (i, emoji) in enumerate(other_emojis):
         spaced_emoji = ' '.join(list(emoji))
@@ -169,6 +186,13 @@ def handle_emojis(text : str) -> str:
 # Normalize a piece of text
 # Tweets are whitespace separated, have <user> and <url> already
 def normalize_sentence(text: str) -> str:
+    '''
+    Normalize a sentence by removing numbers, removing some punctuation,
+    replacing emojis, replacing some abbreviations and lemmatizing.
+
+    Args:
+        text:   Text to be normalized.
+    '''
     # lower case the text
     text = text.lower()
 
@@ -190,7 +214,7 @@ def normalize_sentence(text: str) -> str:
 
     # Reform Emoijis of the form (<char>) e.g. (y)
     text = re.sub(r'\(\s(?P<f1>\w)\s\)', r'(\1)', text)
-    text = handle_emojis(text)
+    text = _handle_emojis(text)
 
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text)
@@ -228,6 +252,7 @@ def normalize_sentence(text: str) -> str:
         for t in range(5):
             text = text.replace(p + ' ' + p, p * 2)
     # Lematize, need to pass words individually
-    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word) for word in text.split())
+    text = ' '.join(nltk.WordNetLemmatizer().lemmatize(word)
+        for word in text.split())
 
     return text

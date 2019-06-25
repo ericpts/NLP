@@ -150,6 +150,8 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == '__main__':
+    init()
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--eval",
