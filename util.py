@@ -3,12 +3,33 @@ import nltk
 import string
 import pickle
 import numpy as np
-import tensorflow.keras as keras
-
 
 from typing import Tuple, Optional
 from pathlib import Path
 from constants import *
+
+
+def get_id() -> str:
+    """
+    Creates a unique 5-letter ID.
+    """
+    return ''.join(random.choice(string.ascii_letters + string.digits)
+        for i in range(5))
+
+
+def configures() -> None:
+    '''
+    Configures tensorflow and creates directories. This should be run at the
+    beginning of a script.
+    '''
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.log_device_placement = False
+
+    os.system("mkdir -p models")
+    os.system("mkdir -p checkpoints")
+    os.system("mkdir -p logs")
+    os.system("mkdir -p preds")
 
 
 def save_object(obj : object, name : str) -> None:
@@ -30,6 +51,7 @@ def load_object(name : str) -> object:
     '''
     with open(name, 'rb') as f:
         return pickle.load(f)
+
 
 def load_data(
     train : bool,

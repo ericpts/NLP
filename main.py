@@ -18,21 +18,12 @@ from constants import *
 from util import *
 from models import *
 
-import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-config.log_device_placement = False  # to log device placement (on which device the operation ran)
-                                    # (nothing gets printed in Jupyter, only if you run it standalone)
-sess = tf.Session(config=config)
-set_session(sess)  # set this TensorFlow session as the default session for Keras
-startTime = strftime('%d-%m-%Y_%H-%M-%S', localtime())
-
 
 def get_callbacks(model_name: str) -> Callback:
-    checkpoint_id = ''.join(random.choice(string.ascii_letters + string.digits)
-        for i in range(5))
+    """
+    Returns the callbacks to append for training.
+    """
+    checkpoint_id =
 
     checkpoint_name = "{}-{}-{}-{}.hdf5".format(
         model_name,
@@ -68,11 +59,6 @@ def get_callbacks(model_name: str) -> Callback:
 
 
 def main(args: argparse.Namespace) -> None:
-    os.system("mkdir -p models")
-    os.system("mkdir -p checkpoints")
-    os.system("mkdir -p logs")
-    os.system("mkdir -p preds")
-
     C['BATCH_SIZE'] = args.batch_size
     if args.model_name in ['elmomultilstm2', 'elmomultilstm3', 'elmomultilstm4', 'elmomultilstm5']:
         C['ELMO_SEQ'] = True
@@ -129,7 +115,9 @@ def main(args: argparse.Namespace) -> None:
     elif args.load is None:
         print("Loading previously trained .bin model from models/")
         print("You can specify a checkpoint to load from with --load")
-        model = keras.models.load_model(model_path, custom_objects={'ElmoEmbeddingLayer': ElmoEmbedding.layer})
+        model = keras.models.load_model(model_path, custom_objects={
+            'ElmoEmbeddingLayer': ElmoEmbedding.layer,
+        })
         print('Model loaded from disk.')
 
     # Predict using the test data

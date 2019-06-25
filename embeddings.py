@@ -2,11 +2,12 @@ import os
 import sys
 import argparse
 import gensim
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import keras.backend as K
-import numpy as np
 import keras.layers as layers
+import numpy as np
 
 from pathlib import Path
 from gensim import models
@@ -29,9 +30,7 @@ class Embedding(object):
         raise NotImplementedError()
 
 
-class Word2Vec(Embedding):
-    embedding_matrix = None
-
+class Word2VecEmbedding(Embedding):
     @staticmethod
     def layer() -> Layer:
         word_index = load_object(TOKENIZER_PATH).word_index
@@ -53,15 +52,6 @@ class Word2Vec(Embedding):
             weights=[embedding_matrix],
             input_length=MAX_SEQUENCE_LENGTH,
             trainable=True)
-
-    @staticmethod
-    def debug_embedding() -> None:
-        model = gensim.models.Word2Vec.load("models/word2vecTrainTest.model")
-        print('man:', model['man'])
-        print('woman:', model['woman'])
-        print('king:', model['king'])
-        print('queen:',model['queen'])
-        print('res:', model['king'] - model['man'] + model['woman'])
 
     @staticmethod
     def __map_extra_symbols(text : str) -> str:
@@ -92,29 +82,20 @@ class Word2Vec(Embedding):
             window=5,
             workers=4,
             min_count=1)
-        os.system("mkdir -p models")
         model.save("models/word2vecTrainTest.model")
 
         return sentences
 
 
-# mode 1: sentence -> (1024,)
-# mode 2: sentence 50 max -> (50, 1024)
-# mode 3: sentence 50 max -> (50, 1536)
 class ElmoEmbeddingLayer(Layer):
-    def __init__(self, mode, trainable=True, **kwargs):
-        self.mode = mode
-        if self.mode == 3:
-            self.dimensions = 1024 + 512
-        else:
-            self.dimensions = 1024
+    def __init__(self, trainable=True, **kwargs):
+        self.dimensions = 1024
         self.trainable = trainable
         super(ElmoEmbeddingLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.elmo = hub.Module(
             'https://tfhub.dev/google/elmo/2',
-            # 'module/module_elmo2/',
             trainable=self.trainable,
             name="{}_module".format(self.name))
 
@@ -122,62 +103,18 @@ class ElmoEmbeddingLayer(Layer):
         super(ElmoEmbeddingLayer, self).build(input_shape)
 
     def call(self, x, mask=None):
-        if self.mode == 1:
-            result = self.elmo(
-                K.squeeze(K.cast(x, tf.string), axis=1),
-                as_dict=True,
-                signature='default',
-            )['default']
-            return result
-        elif self.mode == 2:
-            r1 = self.elmo(
-                inputs={
-                    'tokens': K.cast(x, tf.string),
-                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
-                    # 'sequence_len': [MAX_SEQUENCE_LENGTH for i in range(C['BATCH_SIZE'])]
-                },
-                as_dict=True,
-                signature='tokens',
-            )['elmo']
-            return r1
-        else:
-            r1 = self.elmo(
-                inputs={
-                    'tokens': K.cast(x, tf.string),
-                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
-                    # 'sequence_len': [MAX_SEQUENCE_LENGTH for i in range(C['BATCH_SIZE'])]
-                },
-                as_dict=True,
-                signature='tokens',
-            )['elmo']
-            r2 = self.elmo(
-                inputs={
-                    'tokens': K.cast(x, tf.string),
-                    'sequence_len':tf.constant(C['BATCH_SIZE'] * [MAX_SEQUENCE_LENGTH])
-                },
-                as_dict=True,
-                signature='tokens',
-            )['word_emb']
-            return tf.concat([r1, r2], 2)
+        result = self.elmo(
+            K.squeeze(K.cast(x, tf.string), axis=1),
+            as_dict=True,
+            signature='default',
+        )['default']
+        return result
 
     def compute_mask(self, inputs, mask=None):
         return K.not_equal(inputs, '--PAD--')
 
     def compute_output_shape(self, input_shape):
-        if self.mode == 1:
-            return (input_shape[0], self.dimensions)
-        else:
-            return (input_shape[0], MAX_SEQUENCE_LENGTH, self.dimensions)
-
-    def get_config(self):
-        base_config = super(ElmoEmbeddingLayer, self).get_config()
-        base_config['mode'] = self.mode
-        base_config['trainable'] = self.trainable
-        return base_config
-
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
+        return (input_shape[0], self.dimensions)
 
 
 class ElmoEmbedding(Embedding):
@@ -186,11 +123,8 @@ class ElmoEmbedding(Embedding):
         return []
 
     @staticmethod
-    # mode 1: sentence -> (1024,)
-    # mode 2: sentence 50 max -> (50, 1024)
-    # mode 3: sentence 50 max -> (50, 1536)
-    def layer(mode, trainable = True) -> Layer:
-        return ElmoEmbeddingLayer(mode, trainable=trainable)
+    def layer(trainable = True) -> Layer:
+        return ElmoEmbeddingLayer(trainable=trainable)
 
 
 class DefaultEmbedding(Embedding):
@@ -207,9 +141,25 @@ class DefaultEmbedding(Embedding):
         )
 
 
+def main(args: argparse.Namespace) -> None:
+    if ns.train not in embeddings:
+        print("{} model not present. Possible embeddings: {}".format(
+            ns.train,
+            list(embeddings.keys()),
+        ))
+        sys.exit(1)
+
+    model = embeddings[ns.train]
+
+    X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
+    X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
+    X_test = Path(TEST_DATA_FILE).read_text().split('\n')[:-1] # Remove the index
+    s = model.learn_embeddings([X_pos, X_neg, X_test])
+
+
 if __name__ == '__main__':
     embeddings = {
-        "word2vec" : Word2Vec,
+        "word2vec" : Word2VecEmbedding,
     }
 
     parser = argparse.ArgumentParser()
@@ -223,22 +173,6 @@ if __name__ == '__main__':
 
     ns = parser.parse_args()
     if ns.train:
-        if ns.train not in embeddings:
-            print("{} model not present. Possible embeddings: {}".format(
-                ns.train,
-                list(embeddings.keys()),
-            ))
-            sys.exit(1)
-
-        model = embeddings[ns.train]
-
-        X_pos = Path(POSITIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1] # last one is empty
-        X_neg = Path(NEGATIVE_TRAIN_DATA_FILE).read_text().split('\n')[:-1]
-        X_test = Path(TEST_DATA_FILE).read_text().split('\n')[:-1] # Remove the index
-        s = model.learn_embeddings([X_pos, X_neg, X_test])
-
-        print('LOADING EMBEDDING')
-        Word2Vec.debug_embedding()
+        main(ns)
         sys.exit(0)
-
     parser.print_help()

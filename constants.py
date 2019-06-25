@@ -23,7 +23,7 @@ DATA_TEXT = {
 PREDICTION_FILE = 'test_prediction.csv'
 PREDICTION_DEBUG_FILE = 'test_prediction_debug.csv'
 
-TRAIN_TEST_SPLIT_PERCENTAGE = 0.2
+TRAIN_TEST_SPLIT_PERCENTAGE = 0.1
 
 # Used for assigning numbers to most popular words and ignoring the rest
 MAX_WORDS = 20000
@@ -31,4 +31,3 @@ MAX_WORDS = 20000
 MAX_SEQUENCE_LENGTH = 50
 # Embedding dimension of words
 EMBEDDING_DIM = 100
-C = {'ELMO_SEQ': False, 'BATCH_SIZE': 32}
