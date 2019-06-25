@@ -14,9 +14,6 @@ from embeddings import DefaultEmbedding
 
 
 def _name_model(name: str) -> str:
-    '''
-    Given a base name, gives a unique name to a model.
-    '''
     return "{}-{}".format(name, get_id())
 
 
@@ -57,9 +54,6 @@ class ElmoModels:
 
 
 class BaseModels:
-    '''
-    Models that use
-    '''
     @staticmethod
     def birnn() -> Model:
         # acc(train/valid/test): 0.86/0.855/0.862 | 5 epochs, commit b3ec | Adam lr 0.0001
