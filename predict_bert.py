@@ -25,7 +25,7 @@ keras_bert.bert.gelu = gelu
 
 
 BATCH_SIZE = 64
-EPOCHS = 100
+EPOCHS = 50
 STEPS_PER_EPOCH = 2000
 
 
@@ -132,82 +132,26 @@ def get_bert_data(train: bool):
     return X, y
 
 
-def main():
+def predict():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, help='Where to load the weights from.')
-    parser.add_argument('--lr', type=str, default='2e-5', help='Learning rate.')
-
     args = parser.parse_args()
 
+    weights = Path(args.weights)
+    assert weights.exists()
+
     model = get_bert_model()
-    model.summary()
+    model.load_weights(str(weights))
+    print('Loaded model.')
+    X_test, _ = get_bert_data(train=False)
 
-    if args.weights:
-        weights = Path(args.weights)
-        assert weights.exists()
-        model.load_weights(str(weights))
-        print(f'Loaded weights from {weights}.')
+    y_pred = model.predict(X_test)
+    y_pred = [1 if pred > 0.5 else -1 for pred in y_pred]
+    df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
+    df.index.name = 'Id'
+    df.to_csv('bert_out.csv')
 
-    X, y = get_bert_data(True)
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y, test_size=constants.TRAIN_TEST_SPLIT_PERCENTAGE)
-
-    D_train = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    D_train = D_train.shuffle(y_train.shape[0])
-    D_train = D_train.batch(BATCH_SIZE)
-    D_train = D_train.repeat()
-
-    D_val = tf.data.Dataset.from_tensor_slices((X_val, y_val))
-    D_val = D_val.batch(BATCH_SIZE)
-
-    total_steps = STEPS_PER_EPOCH * EPOCHS
-    warmup_steps = total_steps // 10
-    decay_steps = total_steps - warmup_steps
-
-    print(f'decay_steps = {decay_steps}, warmup_steps = {warmup_steps}', flush=True)
-
-    lr = float(args.lr)
-    print(f'Using a learning rate of {lr}')
-
-    model.compile(
-        optimizer=keras_bert.AdamWarmup(
-            decay_steps=decay_steps,
-            warmup_steps=warmup_steps,
-            lr=lr,
-            min_lr=1e-7,
-            epsilon=1e-3,
-        ),
-        loss='binary_crossentropy',
-        metrics=['accuracy'],
-    )
-
-    filepath = Path('models') / str(int(time.time())) / "bert-{epoch:02d}-{val_accuracy:.4f}.hdf5"
-    filepath.parent.mkdir(exist_ok=True, parents=True)
-
-    checkpoint = keras.callbacks.ModelCheckpoint(
-        str(filepath),
-        monitor='val_accuracy',
-        verbose=1,
-        # save_best_only=True,
-        save_weights_only=True,
-        mode='max',
-        period=2,
-    )
-
-    callbacks_list = [
-        checkpoint,
-    ]
-
-    model.fit(
-        D_train,
-        validation_data=D_val,
-        epochs=EPOCHS,
-        callbacks=callbacks_list,
-        steps_per_epoch=STEPS_PER_EPOCH,
-    )
 
 
 if __name__ == '__main__':
-    # predict()
-    main()
+    predict()
