@@ -23,6 +23,7 @@ def _name_model(name: str) -> str:
 class ElmoModels:
     @staticmethod
     def elmo() -> Model:
+        # acc(train/valid/test): 0.87/0.84/0.84 | 10 epochs, commit b3ec | Adam lr 0.001
         inputs = layers.Input(shape=(1, ), dtype="string")
         X = inputs
 
@@ -62,7 +63,6 @@ class BaseModels:
     @staticmethod
     def birnn() -> Model:
         # acc(train/valid/test): 0.86/0.855/0.862 | 5 epochs, commit b3ec | Adam lr 0.0001
-        # note: 256 Gru & 128 Dense is on leon
         inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
 
         X = inputs
@@ -160,7 +160,7 @@ class TransferModels:
 
     @staticmethod
     def transfer_kernels(models: List[Model] = None) -> Model:
-        # acc(train/valid/test): 0.87/0.87/0.86 | 2 epochs, commit ad1e | Adam lr 0.001
+        # acc(train/valid/test): 0.87/0.87/0.863 | 2 epochs, commit ad1e | Adam lr 0.001
         # Pre: models[0] is birnn
         birnn = BaseModels.birnn() if models is None else models[0]
         inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ))
