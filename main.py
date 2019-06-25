@@ -19,7 +19,7 @@ from util import *
 from models import *
 
 
-def __get_callbacks(model_name: str, session_id: str) -> Callback:
+def _get_callbacks(model_name: str, session_id: str) -> Callback:
     '''
     Returns the callbacks to append for training.
     '''
@@ -112,7 +112,7 @@ def main(args: argparse.Namespace) -> None:
             validation_data=(X_val, y_val),
             epochs=args.epochs,
             batch_size=args.batch_size,
-            callbacks=__get_callbacks(args.model_name, session_id))
+            callbacks=_get_callbacks(args.model_name, session_id))
 
         # Save the final weights
         model.save(model_path)
@@ -133,14 +133,20 @@ def main(args: argparse.Namespace) -> None:
     y_pred       = [1 if pred > 0.5 else -1 for pred in y_pred]
 
     # Save predictions
-    df = pd.DataFrame(y_pred, columns=['Prediction'], index=range(1, len(y_pred) + 1))
+    df = pd.DataFrame(
+        y_pred,
+        columns=['Prediction'],
+        index=range(1, len(y_pred) + 1))
     df.index.name = 'Id'
-    df.to_csv("preds/{}-{}".format(args.model_name, session_id))
+    df.to_csv("preds/{}-{}.csv".format(args.model_name, session_id))
 
     # Save predictions debug file
-    df = pd.DataFrame(y_pred_debug, columns=['Prediction'], index=range(1, len(y_pred_debug) + 1))
+    df = pd.DataFrame(
+        y_pred_debug,
+        columns=['Prediction'],
+        index=range(1, len(y_pred_debug) + 1))
     df.index.name = 'Id'
-    df.to_csv(PREDICTION_DEBUG_FILE)
+    df.to_csv("preds/{}-{}-debug.csv".format(args.model_name, session_id))
 
 
 if __name__ == '__main__':

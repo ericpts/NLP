@@ -88,9 +88,16 @@ class Word2VecEmbedding(Embedding):
 
 
 class ElmoEmbeddingLayer(Layer):
-    def __init__(self, trainable=True, **kwargs):
+    def __init__(self,
+        trainable=True,
+        batch_size=32,
+        elmo_type='default',
+        **kwargs
+    ):
+        self.batch_size = batch_size
         self.dimensions = 1024
         self.trainable = trainable
+        self.type = elmo_type
         super(ElmoEmbeddingLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -103,18 +110,20 @@ class ElmoEmbeddingLayer(Layer):
         super(ElmoEmbeddingLayer, self).build(input_shape)
 
     def call(self, x, mask=None):
-        result = self.elmo(
-            K.squeeze(K.cast(x, tf.string), axis=1),
+        return self.elmo(
+            inputs={
+                'tokens': K.cast(x, tf.string),
+                'sequence_len': tf.constant(self.batch_size * [MAX_SEQUENCE_LENGTH])
+            },
             as_dict=True,
-            signature='default',
-        )['default']
-        return result
+            signature='tokens',
+        )[self.type]
 
     def compute_mask(self, inputs, mask=None):
         return K.not_equal(inputs, '--PAD--')
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.dimensions)
+        return (input_shape[0], MAX_SEQUENCE_LENGTH, self.dimensions)
 
 
 class ElmoEmbedding(Embedding):
@@ -123,8 +132,8 @@ class ElmoEmbedding(Embedding):
         return []
 
     @staticmethod
-    def layer(trainable = True) -> Layer:
-        return ElmoEmbeddingLayer(trainable=trainable)
+    def layer(elmo_type: str= 'default', trainable: bool = True) -> Layer:
+        return ElmoEmbeddingLayer(elmo_type=elmo_type, trainable=trainable)
 
 
 class DefaultEmbedding(Embedding):

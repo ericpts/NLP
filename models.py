@@ -26,7 +26,7 @@ class ElmoModels:
         inputs = layers.Input(shape=(1, ), dtype="string")
         X = inputs
 
-        X = ElmoEmbedding.layer()(X)
+        X = ElmoEmbedding.layer(elmo_type='default')(X)
         X = layers.Dense(512, activation='relu')(X)
         X = layers.Dropout(0.3)(X)
         X = layers.Dense(1, activation='sigmoid')(X)
@@ -39,10 +39,10 @@ class ElmoModels:
 
     @staticmethod
     def elmomultilstm() -> Model:
-        inputs = layers.Input(shape=(1, ), dtype="string")
+        inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
         X = inputs
-        X = ElmoEmbedding.layer()(X)
+        X = ElmoEmbedding.layer(elmo_type='elmo')(X)
         X = layers.LSTM(units=2048, return_sequences=True)(X)
         X = layers.LSTM(units=1024)(X)
         X = layers.Dropout(0.5)(X)
