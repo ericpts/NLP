@@ -45,7 +45,7 @@ class Word2VecEmbedding(Embedding):
             if word in embeddings_index.vocab:
                 # Words not in the embedding index are all 0
                 embedding_matrix[idx] = embeddings_index[word]
-
+        
         return layers.Embedding(
             len(word_index) + 1,
             EMBEDDING_DIM,
@@ -73,7 +73,7 @@ class Word2VecEmbedding(Embedding):
         for f in files:
             for line in f:
                 tokens = word_tokenize(
-                    Word2Vec.__map_extra_symbols(normalize_sentence(line)))
+                    Word2VecEmbedding.__map_extra_symbols(normalize_sentence(line)))
                 sentences.append([w for w in tokens if w.isalpha()])
 
         model = gensim.models.Word2Vec(
