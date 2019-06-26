@@ -43,13 +43,11 @@ def _get_callbacks(model_name: str, session_id: str) -> Callback:
 
     # Setup tensorboard
     tensorboard = keras.callbacks.TensorBoard(
-        log_dir='./logs' + '/' + model_name + startTime,
+        log_dir="./logs",
         histogram_freq=1 if model_name not in [
             "elmo",
-            "elmomultilstm2",
-            "elmomultilstm3",
-            "elmomultilstm4",
-            "elmomultilstm5"] else 0,
+            "elmobirnn",
+            "elmomultilstm"] else 0,
         update_freq=10000,
     )
 
@@ -57,7 +55,7 @@ def _get_callbacks(model_name: str, session_id: str) -> Callback:
 
 
 def main(args: argparse.Namespace) -> None:
-    text_input = args.model_name in ['elmo', 'elmomultilstm']
+    text_input = args.model_name in ['elmo', 'elmobirnn', 'elmomultilstm']
     model_path = os.path.join('models','{}.bin'.format(args.model_name))
     session_id = get_id()
 
@@ -103,6 +101,7 @@ def main(args: argparse.Namespace) -> None:
         print('Train data: {}, Validation data: {}'.format(
             X_train.shape[0],
             X_val.shape[0],
+
         ))
 
         # Train the model

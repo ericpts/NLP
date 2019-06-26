@@ -126,6 +126,8 @@ def prepare_data(train: bool, as_text: bool) -> None:
 
     # Saving processed text
     if as_text:
+        supplement = lambda l: l + ['' for i in range(MAX_SEQUENCE_LENGTH - len(l))] 
+        X = [supplement(x.split()) for x in X]
         if train:
             np.savez(DATA_TEXT[train], X=X, y=y)
         else:

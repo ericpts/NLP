@@ -36,6 +36,26 @@ class ElmoModels:
         return model
 
     @staticmethod
+    def elmobirnn() -> Model:
+        inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
+
+        X = inputs
+        X = ElmoEmbedding.layer(elmo_type='elmo')(X)
+        X = layers.normalization.BatchNormalization()(X)
+        X = layers.Bidirectional(layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2, return_sequences=True))(X)
+        X = layers.Bidirectional(layers.GRU(
+            units=128, dropout=.2, recurrent_dropout=.2))(X)
+        X = layers.Dropout(.5)(X)
+        X = layers.Dense(64, activation='relu')(X)
+        X = layers.Dense(1, activation='sigmoid')(X)
+
+        return Model(
+            inputs=inputs,
+            outputs=X,
+            name=_name_model('birnn'))
+    
+    @staticmethod
     def elmomultilstm() -> Model:
         inputs = layers.Input(shape=(MAX_SEQUENCE_LENGTH, ), dtype="string")
 
@@ -240,6 +260,7 @@ class ModelBuilder:
         'transfer-kernels': Models.transfer_kernels,
 
         'elmo': Models.elmo,
+        'elmobirnn': Models.elmobirnn,
         'elmomultilstm': Models.elmomultilstm,
     }
 
